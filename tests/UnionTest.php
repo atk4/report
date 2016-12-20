@@ -26,6 +26,76 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
             ],
         ];
 
+    public function testNestedQuery()
+    {
+        $t = new Transaction($this->db);
+
+        $this->assertEquals(
+            '((select `name` from `invoice`) UNION ALL (select `name` from `payment`)) `derivedTable`', 
+            $t->getSubQuery(['name'])->render()
+        );
+
+        $this->assertEquals(
+            '((select `name`,`amount` from `invoice`) UNION ALL (select `name`,`amount` from `payment`)) `derivedTable`', 
+            $t->getSubQuery(['name', 'amount'])->render()
+        );
+
+        $this->assertEquals(
+            '((select `name` from `invoice`) UNION ALL (select `name` from `payment`)) `derivedTable`', 
+            $t->getSubQuery(['name'])->render()
+        );
+
+    }
+
+    /**
+     * If field is not set for one of the nested model, instead of generating exception, NULL will be filled in.
+     */
+    function testMissingField() {
+        $t = new Transaction($this->db);
+        $t->m_invoice->addExpression('type','"invoice"');
+        $t->addField('type');
+
+        $this->assertEquals(
+            '((select ("invoice") `type`,`amount` from `invoice`) UNION ALL (select (NULL) `type`,`amount` from `payment`)) `derivedTable`', 
+            $t->getSubQuery(['type', 'amount'])->render()
+        );
+    }
+
+
+    public function testActions()
+    {
+        $t = new Transaction($this->db);
+
+        $this->assertEquals(
+            'select `name`,`amount` from ((select `name`,`amount` from `invoice`) UNION ALL (select `name`,`amount` from `payment`)) `derivedTable`',
+            $t->action('select')->render()
+        );
+
+        $this->assertEquals(
+            'select `name` from ((select `name` from `invoice`) UNION ALL (select `name` from `payment`)) `derivedTable`',
+            $t->action('field', ['name'])->render()
+        );
+
+        $this->assertEquals(
+            'select sum(`cnt`) from ((select count(*) `cnt` from `invoice`) UNION ALL (select count(*) `cnt` from `payment`)) `derivedTable`',
+            $t->action('count')->render()
+        );
+
+        $this->assertEquals(
+            'select sum(`val`) from ((select sum(`amount`) `val` from `invoice`) UNION ALL (select sum(`amount`) `val` from `payment`)) `derivedTable`',
+            $t->action('fx', ['sum', 'amount'])->render()
+        );
+    }
+
+    public function testActions2()
+    {
+        $t = new Transaction($this->db);
+        $this->assertEquals(5, $t->action('count')->getOne());
+
+        $this->assertEquals(37, $t->action('fx', ['sum', 'amount'])->getOne());
+    }
+
+
     public function testBasics()
     {
 
@@ -60,15 +130,38 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
         ], $client->ref('Transaction')->export());
     }
 
+    function testGrouping1() {
+
+        $t = new Transaction($this->db);
+
+        $t->groupBy('name', ['amount'=>'sum([amount])']);
+
+        $this->assertEquals(
+            '((select `name`,sum(`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable`', 
+            $t->getSubQuery(['name', 'amount'])->render()
+        );
+    }
+
+    function testGrouping2() {
+
+        $t = new Transaction($this->db);
+
+        $t->groupBy('name', ['amount'=>'sum([amount])']);
+
+        $this->assertEquals(
+            'select `name`,sum(`amount`) `amount` from ((select `name`,sum(`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable`', 
+            $t->action('select', [['name','amount']])->render()
+        );
+    }
 
     /**
      * If all nested models have a physical field to which a grouped column can be mapped into, then we should group all our
      * sub-queries
      */
-    function testSubGrouping()
+    function testGrouping3()
     {
         $t = new Transaction($this->db);
-        $t->groupBy('name', ['amount'=>'sum']);
+        $t->groupBy('name', ['amount'=>'sum([amount])']);
         $t->setOrder('name');
 
         echo $t->action('select')->getDebugQuery();
@@ -95,14 +188,6 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
      * still roll them up on the top-level.
      */
     function testTopGrouping()
-    {
-    }
-
-    /**
-     * Text actions. Basically making sure that the UnionModel can act as a drop-in replacement into a UI such as
-     * Grid with pagination
-     */
-    function testActions()
     {
     }
 }

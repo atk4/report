@@ -7,8 +7,8 @@ class Transaction extends \atk4\report\UnionModel
         parent::init();
 
         // first lets define nested models
-        $m_invoice = $this->addNestedModel(new Invoice());
-        $m_payment = $this->addNestedModel(new Payment());
+        $this->m_invoice = $this->addNestedModel(new Invoice());
+        $this->m_payment = $this->addNestedModel(new Payment());
 
         // next, define common fields
         $this->addField('name');

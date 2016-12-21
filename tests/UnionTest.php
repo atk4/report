@@ -26,9 +26,14 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
             ],
         ];
 
-    public function testNestedQuery()
+    function setUp() {
+        parent::setUp();
+        $this->t = new Transaction($this->db);
+    }
+
+    public function testNestedQuery1()
     {
-        $t = new Transaction($this->db);
+        $t = $this->t;
 
         $this->assertEquals(
             '((select `name` from `invoice`) UNION ALL (select `name` from `payment`)) `derivedTable`', 
@@ -51,7 +56,7 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
      * If field is not set for one of the nested model, instead of generating exception, NULL will be filled in.
      */
     function testMissingField() {
-        $t = new Transaction($this->db);
+        $t = $this->t;
         $t->m_invoice->addExpression('type','"invoice"');
         $t->addField('type');
 
@@ -64,7 +69,7 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     public function testActions()
     {
-        $t = new Transaction($this->db);
+        $t = $this->t;
 
         $this->assertEquals(
             'select `name`,`amount` from ((select `name`,`amount` from `invoice`) UNION ALL (select `name`,`amount` from `payment`)) `derivedTable`',
@@ -89,7 +94,7 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     public function testActions2()
     {
-        $t = new Transaction($this->db);
+        $t = $this->t;
         $this->assertEquals(5, $t->action('count')->getOne());
 
         $this->assertEquals(37, $t->action('fx', ['sum', 'amount'])->getOne());
@@ -132,7 +137,7 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     function testGrouping1() {
 
-        $t = new Transaction($this->db);
+        $t = $this->t;
 
         $t->groupBy('name', ['amount'=>'sum([amount])']);
 
@@ -144,12 +149,12 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     function testGrouping2() {
 
-        $t = new Transaction($this->db);
+        $t = $this->t;
 
         $t->groupBy('name', ['amount'=>'sum([amount])']);
 
         $this->assertEquals(
-            'select `name`,sum(`amount`) `amount` from ((select `name`,sum(`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable`', 
+            'select `name`,sum(`amount`) `amount` from ((select `name`,sum(`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable` group by `name`', 
             $t->action('select', [['name','amount']])->render()
         );
     }
@@ -160,11 +165,10 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
      */
     function testGrouping3()
     {
-        $t = new Transaction($this->db);
+        $t = $this->t;
         $t->groupBy('name', ['amount'=>'sum([amount])']);
         $t->setOrder('name');
 
-        echo $t->action('select')->getDebugQuery();
 
         $this->assertEquals([
             ['name' =>"chair purchase", 'amount' => 8],
@@ -172,7 +176,6 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
             ['name' =>"prepay", 'amount' => 10],
             ['name' =>"table purchase", 'amount' => 15],
         ], $t->export());
-
     }
 
     /**
@@ -181,13 +184,54 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
      */
     function testSubGroupingByExpressions()
     {
+        $t = $this->t;
+        $t->m_invoice->addExpression('type','"invoice"');
+        $t->m_payment->addExpression('type','"payment"');
+        $t->addField('type');
+
+        $t->groupBy('type', ['amount'=>'sum([amount])']);
+
+        $this->assertEquals([
+            ['type'=>'invoice', 'amount' => 23],
+            ['type' =>'payment', 'amount' => 14],
+        ],$t->export(['type','amount']));
+    }
+
+    function testReference()
+    {
+        $c = new Client($this->db);
+        $c->hasMany('tr', new Transaction2());
+
+        $this->assertEquals(19, $c->load(1)->ref('Invoice')->action('fx', ['sum', 'amount'])->getOne());
+        $this->assertEquals(10, $c->load(1)->ref('Payment')->action('fx', ['sum', 'amount'])->getOne());
+
+        $this->assertEquals(29, $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->getOne());
+
+        $this->assertEquals(
+            'select sum(`val`) from ((select sum(`amount`) `val` from `invoice` where `client_id` = :a) '.
+            'UNION ALL (select sum(`amount`) `val` from `payment` where `client_id` = :b)) `derivedTable`',
+            $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->render()
+        );
+
     }
 
     /**
-     * Sometimes we group by value that can emmit single records from sub-model, however according to the rule, we should
-     * still roll them up on the top-level.
+     * Aggregation is supposed to work in theory, but MySQL uses "semi-joins" for this type of query which does not support UNION,
+     * and therefore it complains about `client`.`id` field.
+     *
+     * See also: http://stackoverflow.com/questions/8326815/mysql-field-from-union-subselect#comment10267696_8326815 
      */
-    function testTopGrouping()
+    function testFieldAggregate()
     {
+        $c = new Client($this->db);
+        $c->hasMany('tr', new Transaction2())
+            ->addField('balance', ['field'=>'amount', 'aggregate'=>'sum']);
+
+        
+        /*
+        select `client`.`id`,`client`.`name`,(select sum(`val`) from ((select sum(`amount`) `val` from `invoice` where `client_id` = `client`.`id`) UNION ALL (select sum(`amount`) `val` from `payment` where `client_id` = `client`.`id`)) `derivedTable`) `balance` from `client` where `client`.`id` = 1 limit 0, 1
+
+         */
+        //$c->load(1);
     }
 }

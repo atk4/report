@@ -94,12 +94,12 @@ class UnionModel extends \atk4\data\Model {
 
                 // Some fields are re-mapped for this nested model
                 if(isset($mapping[$field])) {
-                    $field_object = $model->addExpression($field, $mapping[$field]);
+                    $e = $model->expr($mapping[$field]);
 
-                    // When grouping, we could be aggregating this field
-                    /*
-                     */
-                    //}
+                    $model->getElement($field)->destroy();
+
+                    $field_object = $model->addExpression($field, $e);
+
                 } elseif (!$model->hasElement($field)) {
                     $field_object = $model->addExpression($field, 'NULL');
                 } else {
@@ -189,6 +189,15 @@ class UnionModel extends \atk4\data\Model {
         switch ($mode) {
             case 'select':
                 $subquery = $this->getSubQuery($fields);
+                $query = parent::action($mode, $args);
+                $query->reset('table')->table($subquery);
+
+                if($this->group) {
+                    $query->group($this->getElement($this->group));
+                }
+                return $query;
+
+
                 break;
 
             case 'count':

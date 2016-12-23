@@ -6,7 +6,7 @@ namespace atk4\report\tests;
 /**
  * Tests basic create, update and delete operatiotns
  */
-class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
+class UnionExprTest extends \atk4\schema\PHPUnit_SchemaTestCase
 {
 
     private $init_db = 
@@ -28,8 +28,16 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     function setUp() {
         parent::setUp();
-        $this->t = new Transaction($this->db);
+        $this->t = new Transaction2($this->db);
     }
+
+    function testFieldExpr()
+    {
+        $this->assertEquals('`amount`', $this->t->expr('[]',[$this->t->getFieldExpr($this->t->m_invoice, 'amount')])->render());
+        $this->assertEquals('-`amount`', $this->t->expr('[]',[$this->t->getFieldExpr($this->t->m_invoice, 'amount', '-[]')])->render());
+        $this->assertEquals('-NULL', $this->t->expr('[]',[$this->t->getFieldExpr($this->t->m_invoice, 'blah', '-[]')])->render());
+    }
+
 
     public function testNestedQuery1()
     {
@@ -41,7 +49,7 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
         );
 
         $this->assertEquals(
-            '((select `name` `name`,`amount` `amount` from `invoice`) UNION ALL (select `name` `name`,`amount` `amount` from `payment`)) `derivedTable`', 
+            '((select `name` `name`,-`amount` `amount` from `invoice`) UNION ALL (select `name` `name`,`amount` `amount` from `payment`)) `derivedTable`', 
             $t->getSubQuery(['name', 'amount'])->render()
         );
 
@@ -61,7 +69,7 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $t->addField('type');
 
         $this->assertEquals(
-            '((select ("invoice") `type`,`amount` `amount` from `invoice`) UNION ALL (select NULL `type`,`amount` `amount` from `payment`)) `derivedTable`', 
+            '((select ("invoice") `type`,-`amount` `amount` from `invoice`) UNION ALL (select NULL `type`,`amount` `amount` from `payment`)) `derivedTable`', 
             $t->getSubQuery(['type', 'amount'])->render()
         );
     }
@@ -72,7 +80,7 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $t = $this->t;
 
         $this->assertEquals(
-            'select `name`,`amount` from ((select `name` `name`,`amount` `amount` from `invoice`) UNION ALL (select `name` `name`,`amount` `amount` from `payment`)) `derivedTable`',
+            'select `name`,`amount` from ((select `name` `name`,-`amount` `amount` from `invoice`) UNION ALL (select `name` `name`,`amount` `amount` from `payment`)) `derivedTable`',
             $t->action('select')->render()
         );
 
@@ -87,7 +95,7 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
         );
 
         $this->assertEquals(
-            'select sum(`val`) from ((select sum(`amount`) `val` from `invoice`) UNION ALL (select sum(`amount`) `val` from `payment`)) `derivedTable`',
+            'select sum(`val`) from ((select sum(-`amount`) `val` from `invoice`) UNION ALL (select sum(`amount`) `val` from `payment`)) `derivedTable`',
             $t->action('fx', ['sum', 'amount'])->render()
         );
     }
@@ -97,7 +105,16 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $t = $this->t;
         $this->assertEquals(5, $t->action('count')->getOne());
 
-        $this->assertEquals(37, $t->action('fx', ['sum', 'amount'])->getOne());
+        $this->assertEquals(-9, $t->action('fx', ['sum', 'amount'])->getOne());
+    }
+
+    public function testSubAction1()
+    {
+        $t = $this->t;
+        $this->assertEquals(
+            '((select sum(-`amount`) from `invoice`) UNION ALL (select sum(`amount`) from `payment`)) `derivedTable`',
+            $t->getSubAction('fx', ['sum','amount'])->render()
+        );
     }
 
 
@@ -115,22 +132,22 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $client->load(1);
         $this->assertEquals(19, $client->ref('Invoice')->action('fx', ['sum', 'amount'])->getOne());
 
-        $t = new Transaction($this->db);
+        $t = new Transaction2($this->db);
         $this->assertEquals([
-            ['name' =>"chair purchase", 'amount' => 4],
-            ['name' =>"table purchase", 'amount' => 15],
-            ['name' =>"chair purchase", 'amount' => 4],
+            ['name' =>"chair purchase", 'amount' => -4],
+            ['name' =>"table purchase", 'amount' => -15],
+            ['name' =>"chair purchase", 'amount' => -4],
             ['name' =>"prepay", 'amount' => 10],
             ['name' =>"full pay", 'amount' => 4],
         ], $t->export());
 
 
         // Transaction is Union Model
-        $client->hasMany('Transaction', new Transaction());
+        $client->hasMany('Transaction', new Transaction2());
 
         $this->assertEquals([
-            ['name' =>"chair purchase", 'amount' => 4],
-            ['name' =>"table purchase", 'amount' => 15],
+            ['name' =>"chair purchase", 'amount' => -4],
+            ['name' =>"table purchase", 'amount' => -15],
             ['name' =>"prepay", 'amount' => 10],
         ], $client->ref('Transaction')->export());
     }
@@ -139,10 +156,10 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         $t = $this->t;
 
-        $t->groupBy('name', ['amount'=>'sum([amount])']);
+        $t->groupBy('name', ['amount'=>'sum([])']);
 
         $this->assertEquals(
-            '((select `name` `name`,sum(`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name` `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable`', 
+            '((select `name` `name`,sum(-`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name` `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable`', 
             $t->getSubQuery(['name', 'amount'])->render()
         );
     }
@@ -151,10 +168,10 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         $t = $this->t;
 
-        $t->groupBy('name', ['amount'=>'sum([amount])']);
+        $t->groupBy('name', ['amount'=>'sum([])']);
 
         $this->assertEquals(
-            'select `name`,sum(`amount`) `amount` from ((select `name` `name`,sum(`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name` `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable` group by `name`', 
+            'select `name`,sum(`amount`) `amount` from ((select `name` `name`,sum(-`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name` `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable` group by `name`', 
             $t->action('select', [['name','amount']])->render()
         );
     }
@@ -166,15 +183,15 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
     function testGrouping3()
     {
         $t = $this->t;
-        $t->groupBy('name', ['amount'=>'sum([amount])']);
+        $t->groupBy('name', ['amount'=>'sum([])']);
         $t->setOrder('name');
 
 
         $this->assertEquals([
-            ['name' =>"chair purchase", 'amount' => 8],
+            ['name' =>"chair purchase", 'amount' => -8],
             ['name' =>"full pay", 'amount' => 4],
             ['name' =>"prepay", 'amount' => 10],
-            ['name' =>"table purchase", 'amount' => 15],
+            ['name' =>"table purchase", 'amount' => -15],
         ], $t->export());
     }
 
@@ -189,10 +206,10 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $t->m_payment->addExpression('type','"payment"');
         $t->addField('type');
 
-        $t->groupBy('type', ['amount'=>'sum([amount])']);
+        $t->groupBy('type', ['amount'=>'sum([])']);
 
         $this->assertEquals([
-            ['type'=>'invoice', 'amount' => 23],
+            ['type'=>'invoice', 'amount' => -23],
             ['type' =>'payment', 'amount' => 14],
         ],$t->export(['type','amount']));
     }
@@ -200,15 +217,15 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
     function testReference()
     {
         $c = new Client($this->db);
-        $c->hasMany('tr', new Transaction());
+        $c->hasMany('tr', new Transaction2());
 
         $this->assertEquals(19, $c->load(1)->ref('Invoice')->action('fx', ['sum', 'amount'])->getOne());
         $this->assertEquals(10, $c->load(1)->ref('Payment')->action('fx', ['sum', 'amount'])->getOne());
 
-        $this->assertEquals(29, $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->getOne());
+        $this->assertEquals(-9, $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->getOne());
 
         $this->assertEquals(
-            'select sum(`val`) from ((select sum(`amount`) `val` from `invoice` where `client_id` = :a) '.
+            'select sum(`val`) from ((select sum(-`amount`) `val` from `invoice` where `client_id` = :a) '.
             'UNION ALL (select sum(`amount`) `val` from `payment` where `client_id` = :b)) `derivedTable`',
             $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->render()
         );
@@ -233,5 +250,22 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
          */
         //$c->load(1);
+    }
+
+
+    /**
+     * Model's conditions can still be placed on the original field values.
+     */
+    function testConditionOnMappedField()
+    {
+        $t = new Transaction2($this->db);
+        $t->m_invoice->addCondition('amount', 4);
+
+        $this->assertEquals([
+            ['name' =>"chair purchase", 'amount' => -4],
+            ['name' =>"chair purchase", 'amount' => -4],
+            ['name' =>"prepay", 'amount' => 10],
+            ['name' =>"full pay", 'amount' => 4],
+        ], $t->export());
     }
 }

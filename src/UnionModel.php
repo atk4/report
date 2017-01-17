@@ -160,7 +160,11 @@ class UnionModel extends \atk4\data\Model {
 
             // also for sub-queries
             if($this->group) {
-                $q->group($this->group);
+                if (isset($mapping[$this->group])) {
+                    $q->group($model->expr($mapping[$this->group]));
+                } else {
+                    $q->group($this->group);
+                }
             }
             $args[$cnt++] = $q;
         }

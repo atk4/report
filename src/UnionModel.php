@@ -236,6 +236,7 @@ class UnionModel extends \atk4\data\Model {
                 if($this->group) {
                     $query->group($this->getElement($this->group));
                 }
+                $this->hook('afterUnionSelect', [$query]);
                 return $query;
 
 
@@ -363,6 +364,7 @@ class UnionModel extends \atk4\data\Model {
                 if($ff[0] == '[') {
                     $ff = substr($ff,1,-1);
                 }
+                if(!$model->hasElement($ff))continue;
                 switch(func_num_args()) {
                 case 2:
                     $model->addCondition($ff, $operator);

@@ -87,7 +87,7 @@ class UnionModel extends \atk4\data\Model {
         $args= [];
 
 
-        foreach($this->union as $model_def) {
+        foreach($this->union as $n=>$model_def) {
             list($model, $mapping) = $model_def;
 
             // map fields for related model
@@ -98,7 +98,14 @@ class UnionModel extends \atk4\data\Model {
                     // Union can be joined with additional
                     // table/query and we don't touch those 
                     // fields
-                    if ($this->getElement($field)->join) {
+
+                    if (!$this->hasElement($field)) {
+                        $field_object = $model->expr('NULL');
+                        $f[$field] = $field_object;
+                        continue;
+                    }
+
+                    if ($this->getElement($field)->join || $this->getElement($field)->never_persist) {
                         continue;
                     }
 
@@ -136,8 +143,7 @@ class UnionModel extends \atk4\data\Model {
 
                     $f[$field] = $field_object;
                 } catch (\atk4\core\Exception $e) {
-                    var_Dump($model->elements);
-                    throw $e->addMoreInfo('model',$model->elements);
+                    throw $e->addMoreInfo('model', $n);
                 }
             }
 
@@ -149,6 +155,10 @@ class UnionModel extends \atk4\data\Model {
                 $subquery = $model->getSubQuery($fields);
                 //$query = parent::action($mode, $args);
                 $q->reset('table')->table($subquery);
+
+                if(isset($model->group)) {
+                    $q->group($model->group);
+                }
 
             }
 
@@ -232,6 +242,18 @@ class UnionModel extends \atk4\data\Model {
         } else {
             $fields = $this->only_fields;
         }
+        $fields2 = [];
+        foreach($fields as $field) {
+            if($this->getElement($field)->never_persist) {
+                continue;
+            }
+            if($this->getElement($field) instanceof \atk4\data\Expression_SQL) {
+                continue;
+            }
+            $fields2[] = $field;
+        }
+        $fields = $fields2;
+        
 
         $subquery = null;
 

@@ -160,7 +160,15 @@ class UnionModel extends \atk4\data\Model {
 
             // also for sub-queries
             if($this->group) {
-                if (isset($mapping[$this->group])) {
+                if(is_array($this->group)) {
+                    foreach($this->group as $gr) {
+                        if(isset($mapping[$gr])) {
+                            $q->group($model->expr($mapping[$gr]));
+                        }else{
+                            $q->group($model->getElement($gr));
+                        }
+                    }
+                } elseif (isset($mapping[$this->group])) {
                     $q->group($model->expr($mapping[$this->group]));
                 } else {
                     $q->group($this->group);
@@ -233,8 +241,8 @@ class UnionModel extends \atk4\data\Model {
                 $query = parent::action($mode, $args);
                 $query->reset('table')->table($subquery);
 
-                if($this->group) {
-                    $query->group($this->getElement($this->group));
+                if(isset($this->group)) {
+                    $query->group($this->group);
                 }
                 $this->hook('afterUnionSelect', [$query]);
                 return $query;

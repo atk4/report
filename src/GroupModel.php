@@ -76,7 +76,7 @@ class GroupModel extends \atk4\data\Model {
 
     function addField($f, $defaults = [])
     {
-        //var_dump($this->master_model->getElement($f));
+        $defaults[0] = $f;
         return $this->add($this->master_model->getElement($f), $defaults);
     }
 

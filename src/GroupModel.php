@@ -74,10 +74,10 @@ class GroupModel extends \atk4\data\Model {
         return $this->master_model->getRef($x);
     }
 
-    function addField($f)
+    function addField($f, $defaults = [])
     {
         //var_dump($this->master_model->getElement($f));
-        return $this->add($this->master_model->getElement($f), $f);
+        return $this->add($this->master_model->getElement($f), $defaults);
     }
 
     /**

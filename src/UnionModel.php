@@ -87,9 +87,7 @@ class UnionModel extends \atk4\data\Model
         $expr = [];
         $args = [];
 
-
-        foreach ($this->union as $n=>$model_def) {
-            list($model, $mapping) = $model_def;
+        foreach ($this->union as $n=>list($model, $mapping)) {
 
             // map fields for related model
             $f = [];
@@ -194,8 +192,7 @@ class UnionModel extends \atk4\data\Model
         $expr = [];
         $args = [];
 
-        foreach ($this->union as $model_def) {
-            list($model, $mapping) = $model_def;
+        foreach ($this->union as list($model, $mapping)) {
 
             // now prepare query
             $expr[] = '['.$cnt.']';
@@ -356,8 +353,7 @@ class UnionModel extends \atk4\data\Model
             $field_object = $this->addExpression($field, $e);
         }
 
-        foreach ($this->union as $model) {
-            $model =  $model[0];
+        foreach ($this->union as list($model, $mapping)) {
             if ($model instanceof UnionModel) {
                 $model->aggregate = $aggregate;
                 $model->group = $group;
@@ -373,12 +369,14 @@ class UnionModel extends \atk4\data\Model
             return parent::addCondition($field);
         }
 
+        // if UnionModel has such field, then add condition to it
         if ($f = $this->hasElement($field)) {
-            if($f->join) {
+            //if($f->join) {
                 return parent::addCondition(...func_get_args());
-            }
+            //}
         }
 
+        // otherwise add condition in all sub-models
         foreach ($this->union as $n=>list($model, $mapping)) {
             try {
                 $ff = $field;

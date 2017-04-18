@@ -104,7 +104,7 @@ class GroupModel extends \atk4\data\Model
         }
     }
 
-    public public function setLimit($count, $offset = null)
+    public function setLimit($count, $offset = null)
     {
         $this->master_model->setLimit($count, $offset);
 

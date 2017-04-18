@@ -4,14 +4,14 @@ namespace atk4\report;
 /**
  * UnionModel combines multiple nested models through a UNION in order to retrieve
  * it's value set. The beauty of this class is that it will add fields transparently
- * and will map them appropriatelly from the nested model if you request
+ * and will map them appropriately from the nested model if you request
  * those fields from the union model.
  *
  * For example if you are asking sum(amount), there is no need to fetch any extra
  * fields from sub-models.
  */
-class UnionModel extends \atk4\data\Model {
-
+class UnionModel extends \atk4\data\Model
+{
     /**
      * UnionModel should always be read-only.
      */
@@ -36,7 +36,7 @@ class UnionModel extends \atk4\data\Model {
     /**
      * When aggregation happens, this field will contain list of fields
      * we use in groupBy. Multiple fields can be in the array. All
-     * the remaining fields will be hidded (marked as system()) and
+     * the remaining fields will be hidden (marked as system()) and
      * have their "aggregates" added into the selectQuery (if possible)
      */
     public $group = null;
@@ -61,15 +61,16 @@ class UnionModel extends \atk4\data\Model {
      * For a sub-model with a specified mapping, return expression
      * that represents a field
      */
-    function getFieldExpr($model, $field, $expr = null) {
+    public function getFieldExpr($model, $field, $expr = null)
+    {
         $field_object = $model->hasElement($field);
 
-        if(!$field_object) {
+        if (!$field_object) {
             $field_object = $this->expr('NULL');
         }
 
         // Some fields are re-mapped for this nested model
-        if($expr) {
+        if ($expr) {
             $field_object = $model->expr($expr, [$field_object]);
         }
 
@@ -80,23 +81,21 @@ class UnionModel extends \atk4\data\Model {
      * Configures nested models no have a specified set of fields
      * available
      */
-    function getSubQuery($fields) {
-
+    public function getSubQuery($fields)
+    {
         $cnt = 0;
-        $expr= [];
-        $args= [];
+        $expr = [];
+        $args = [];
 
-
-        foreach($this->union as $n=>$model_def) {
-            list($model, $mapping) = $model_def;
+        foreach ($this->union as $n=>list($model, $mapping)) {
 
             // map fields for related model
             $f = [];
-            foreach($fields as $field){ 
+            foreach ($fields as $field) {
 
                 try {
                     // Union can be joined with additional
-                    // table/query and we don't touch those 
+                    // table/query and we don't touch those
                     // fields
 
                     if (!$this->hasElement($field)) {
@@ -127,7 +126,7 @@ class UnionModel extends \atk4\data\Model {
                         $model->aggregates_applied = [];
                     }
 
-                    if($field_object instanceof \atk4\data\Expression && !in_array($field, $model->aggregates_applied)) 
+                    if($field_object instanceof \atk4\data\Expression && !in_array($field, $model->aggregates_applied))
                     {
                         // generate query
 
@@ -156,25 +155,22 @@ class UnionModel extends \atk4\data\Model {
                 //$query = parent::action($mode, $args);
                 $q->reset('table')->table($subquery);
 
-                if(isset($model->group)) {
+                if (isset($model->group)) {
                     $q->group($model->group);
                 }
-
             }
-
-
 
 
 
             $q->field($f);
 
             // also for sub-queries
-            if($this->group) {
-                if(is_array($this->group)) {
-                    foreach($this->group as $gr) {
-                        if(isset($mapping[$gr])) {
+            if ($this->group) {
+                if (is_array($this->group)) {
+                    foreach ($this->group as $gr) {
+                        if (isset($mapping[$gr])) {
                             $q->group($model->expr($mapping[$gr]));
-                        }else{
+                        } else {
                             $q->group($model->getElement($gr));
                         }
                     }
@@ -190,22 +186,21 @@ class UnionModel extends \atk4\data\Model {
         return $this->persistence->dsql()->expr('('.join(' UNION ALL ',$expr).') {'.$cnt.'}', $args);
     }
 
-    function getSubAction($action, $act_arg=[]){
+    public function getSubAction($action, $act_arg=[])
+    {
         $cnt = 0;
-        $expr= [];
-        $args= [];
+        $expr = [];
+        $args = [];
 
-
-        foreach($this->union as $model_def) {
-            list($model, $mapping) = $model_def;
+        foreach ($this->union as list($model, $mapping)) {
 
             // now prepare query
             $expr[] = '['.$cnt.']';
-            if($act_arg && isset($act_arg[1])) {
+            if ($act_arg && isset($act_arg[1])) {
                 $a = $act_arg;
                 $a[1] = $this->getFieldExpr(
-                    $model, 
-                    $a[1], 
+                    $model,
+                    $a[1],
                     isset($mapping[$a[1]]) ?
                     $mapping[$a[1]] :
                     null
@@ -230,11 +225,11 @@ class UnionModel extends \atk4\data\Model {
                 throw new Exception(['UnionModel does not support this action', 'action'=>$mode]);
         }
 
-        if(!$this->only_fields) {
-            $fields = []; 
+        if (!$this->only_fields) {
+            $fields = [];
 
             // get list of available fields
-            foreach($this->elements as $key=>$f) {
+            foreach ($this->elements as $key=>$f) {
                 if ($f instanceof \atk4\data\Field) {
                     $fields[] = $key;
                 }
@@ -243,17 +238,17 @@ class UnionModel extends \atk4\data\Model {
             $fields = $this->only_fields;
         }
         $fields2 = [];
-        foreach($fields as $field) {
-            if($this->getElement($field)->never_persist) {
+        foreach ($fields as $field) {
+            if ($this->getElement($field)->never_persist) {
                 continue;
             }
-            if($this->getElement($field) instanceof \atk4\data\Expression_SQL) {
+            if ($this->getElement($field) instanceof \atk4\data\Expression_SQL) {
                 continue;
             }
             $fields2[] = $field;
         }
         $fields = $fields2;
-        
+
 
         $subquery = null;
 
@@ -263,14 +258,11 @@ class UnionModel extends \atk4\data\Model {
                 $query = parent::action($mode, $args);
                 $query->reset('table')->table($subquery);
 
-                if(isset($this->group)) {
+                if (isset($this->group)) {
                     $query->group($this->group);
                 }
                 $this->hook('afterUnionSelect', [$query]);
                 return $query;
-
-
-                break;
 
             case 'count':
                 $subquery = $this->getSubAction('count', ['alias'=>'cnt']);
@@ -317,54 +309,52 @@ class UnionModel extends \atk4\data\Model {
     }
 
 
-    function export($fields = null)
+    public function export($fields = null)
     {
-        if($fields) {
+        if ($fields) {
             $this->onlyFields($fields);
         }
 
         $data = [];
-        foreach($this->getIterator() as $row) {
+        foreach ($this->getIterator() as $row) {
             $data[] = $row->get();
         }
 
         return $data;
     }
 
-
-    function addNestedModel($class, $mapping = []){
-
+    public function addNestedModel($class, $mapping = [])
+    {
         $m = $this->persistence->add($class);
         $this->union[] = [$m, $mapping];
+
         return $m;
     }
 
     /**
      * Specify a single field or array of fields
      */
-    function groupBy($group, $aggregate = [])
+    public function groupBy($group, $aggregate = [])
     {
 
         $this->aggregate = $aggregate;
         $this->group = $group;
 
-
-        foreach($aggregate as $field=>$expr) {
+        foreach ($aggregate as $field=>$expr) {
 
             $field_object = $this->hasElement($field);
 
             $e = $this->expr($expr, [$field_object]);
 
-            if ($field_object) { 
+            if ($field_object) {
                 $field_object->destroy();
             }
 
             $field_object = $this->addExpression($field, $e);
         }
 
-        foreach($this->union as $model) {
-            $model =  $model[0];
-            if($model instanceof UnionModel) {
+        foreach ($this->union as list($model, $mapping)) {
+            if ($model instanceof UnionModel) {
                 $model->aggregate = $aggregate;
                 $model->group = $group;
             }
@@ -373,41 +363,70 @@ class UnionModel extends \atk4\data\Model {
         return $this;
     }
 
-    function addCondition($field, $operator = null, $value = null)
+    public function addCondition($field, $operator = null, $value = null)
     {
-        if(func_num_args() == 1) {
+        if (func_num_args() == 1) {
             return parent::addCondition($field);
         }
 
+        // if UnionModel has such field, then add condition to it
         if ($f = $this->hasElement($field)) {
-            if($f->join) {
+            //if($f->join) {
                 return parent::addCondition(...func_get_args());
-            }
+            //}
         }
 
-        foreach($this->union as $n=>list($model, $mapping)){
+        // otherwise add condition in all sub-models
+        foreach ($this->union as $n=>list($model, $mapping)) {
             try {
                 $ff = $field;
                 if (isset($mapping[$field])) {
                     $ff = $mapping[$field];
                 }
-                if($ff[0] == '[') {
-                    $ff = substr($ff,1,-1);
+                if ($ff[0] == '[') {
+                    $ff = substr($ff, 1, -1);
                 }
-                if(!$model->hasElement($ff))continue;
-                switch(func_num_args()) {
-                case 2:
-                    $model->addCondition($ff, $operator);
-                    break;
-                case 3:
-                    $model->addCondition($ff, $operator, $value);
-                    break;
+                if (!$model->hasElement($ff)) {
+                    continue;
                 }
-            }catch(\atk4\core\Exception $e) {
+                switch (func_num_args()) {
+                    case 2:
+                        $model->addCondition($ff, $operator);
+                        break;
+                    case 3:
+                        $model->addCondition($ff, $operator, $value);
+                        break;
+                }
+            } catch (\atk4\core\Exception $e) {
                 $e->addMoreInfo('sub_model', $n);
                 throw $e;
             }
         }
+
         return $this;
     }
+
+    // {{{ Debug Methods
+
+    /**
+     * Returns array with useful debug info for var_dump.
+     *
+     * @return array
+     */
+    public function __debugInfo()
+    {
+        $arr = [];
+        foreach ($this->union as $n=>list($model, $mapping)) {
+            $arr[get_class($model)] = array_merge(
+                ['mapping' => $mapping],
+                $model->__debugInfo()
+            );
+        }
+
+        $arr = array_merge(parent::__debugInfo(), ['union_models' => $arr]);
+
+        return $arr;
+    }
+
+    // }}}
 }

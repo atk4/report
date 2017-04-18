@@ -23,8 +23,8 @@ namespace atk4\report;
  * The base model must not be UnionModel or another GroupModel, however it's possible to use GroupModel as nestedModel inside UnionModel.
  * UnionModel implements identical grouping rule on its own.
  */
-class GroupModel extends \atk4\data\Model {
-
+class GroupModel extends \atk4\data\Model
+{
     public $read_only = true;
 
     public $master_model = null;
@@ -35,7 +35,7 @@ class GroupModel extends \atk4\data\Model {
 
     public $aggregate = [];
 
-    function __construct(\atk4\data\Model $model, $opts = [])
+    public function __construct(\atk4\data\Model $model, $opts = [])
     {
         $this->master_model = $model;
         $this->table = $model->table;
@@ -47,14 +47,12 @@ class GroupModel extends \atk4\data\Model {
     /**
      * Specify a single field or array of fields
      */
-    function groupBy($group, $aggregate = [])
+    public function groupBy($group, $aggregate = [])
     {
-
         $this->aggregate = $aggregate;
         $this->group = $group;
 
-
-        foreach($aggregate as $field=>$expr) {
+        foreach ($aggregate as $field=>$expr) {
 
             // field originally defined in the parent model
             $field_object = $this->master_model->hasElement($field);
@@ -69,12 +67,12 @@ class GroupModel extends \atk4\data\Model {
         return $this;
     }
 
-    function getRef($x)
+    public function getRef($x)
     {
         return $this->master_model->getRef($x);
     }
 
-    function addField($f, $defaults = [])
+    public function addField($f, $defaults = [])
     {
         $defaults[0] = $f;
         return $this->add($this->master_model->getElement($f), $defaults);
@@ -83,43 +81,47 @@ class GroupModel extends \atk4\data\Model {
     /**
      * Given a query, will add safe fields in
      */
-    function queryFields($query, $fields = []) {
+    public function queryFields($query, $fields = [])
+    {
         $this->persistence->initQueryFields($this, $query, $fields);
         /*
         foreach($this->elements as $el) {
-
         }
          */
+
         return $query;
     }
 
-    function addGrouping($query)
+    public function addGrouping($query)
     {
-        foreach($this->group as $field) {
+        foreach ($this->group as $field) {
             $el = $this->master_model->hasElement($field);
-            if($el) {
+            if ($el) {
                 $query->group($el);
-            }else {
+            } else {
                 $query->group($this->expr($field));
             }
         }
     }
 
-    public function setLimit($count, $offset = null)
+    public public function setLimit($count, $offset = null)
     {
         $this->master_model->setLimit($count, $offset);
+
         return $this;
     }
 
     public function addCondition(...$args)
     {
         $this->master_model->addCondition(...$args);
+
         return $this;
     }
 
     public function setOrder($field, $desc = null)
     {
         $this->master_model->setOrder($field, $desc);
+
         return $this;
     }
 
@@ -132,11 +134,11 @@ class GroupModel extends \atk4\data\Model {
                 throw new Exception(['GroupModel does not support this action', 'action'=>$mode]);
         }
 
-        if(!$this->only_fields) {
-            $fields = []; 
+        if (!$this->only_fields) {
+            $fields = [];
 
             // get list of available fields
-            foreach($this->elements as $key=>$f) {
+            foreach ($this->elements as $key=>$f) {
                 if ($f instanceof \atk4\data\Field) {
                     $fields[] = $key;
                 }
@@ -144,32 +146,30 @@ class GroupModel extends \atk4\data\Model {
         } else {
             $fields = $this->only_fields;
         }
+
         $fields2 = [];
-        foreach($fields as $field) {
-            if($this->getElement($field)->never_persist) {
+        foreach ($fields as $field) {
+            if ($this->getElement($field)->never_persist) {
                 continue;
             }
-            if($this->getElement($field) instanceof \atk4\data\Expression_SQL) {
+            if ($this->getElement($field) instanceof \atk4\data\Expression_SQL) {
                 continue;
             }
             $fields2[] = $field;
         }
         $fields = $fields2;
-        
 
         $subquery = null;
-
         switch ($mode) {
             case 'select':
-
                 // select but no need your fields
                 $query = $this->master_model->action($mode, [false]);
-
                 $query = $this->queryFields($query, $fields);
 
                 $this->addGrouping($query);
 
                 $this->hook('afterGroupSelect', [$query]);
+
                 return $query;
 
             case 'count':
@@ -184,13 +184,7 @@ class GroupModel extends \atk4\data\Model {
                 $q->table(new \atk4\dsql\Expression("([]) der", [$query]));
                 $q->field('count(*)');
 
-                //echo $q->getDebugQuery(true);;
                 return $q;
-
-                //echo($query->getDebugQuery(true));
-
-                return $query;
-
 
             case 'field':
                 if (!is_string($args[0])) {
@@ -213,6 +207,7 @@ class GroupModel extends \atk4\data\Model {
 
                 $query = parent::action('fx', [$args[0], new \atk4\dsql\Expression('`val`')]);
                 $query->reset('table')->table($subquery);
+
                 return $query;
 
             default:
@@ -228,6 +223,4 @@ class GroupModel extends \atk4\data\Model {
         $query->reset('table')->table($subquery);
         return $query;
     }
-
-
 }

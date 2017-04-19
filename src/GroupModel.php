@@ -35,6 +35,8 @@ class GroupModel extends \atk4\data\Model
 
     public $aggregate = [];
 
+    public $system_fields = [];
+
     public function __construct(\atk4\data\Model $model, $opts = [])
     {
         $this->master_model = $model;
@@ -51,6 +53,11 @@ class GroupModel extends \atk4\data\Model
     {
         $this->aggregate = $aggregate;
         $this->group = $group;
+
+        $this->system_fields = array_merge($this->system_fields, $group);
+        foreach($group as $field) {
+            $this->addField($field);
+        }
 
         foreach ($aggregate as $field=>$expr) {
 
@@ -74,6 +81,9 @@ class GroupModel extends \atk4\data\Model
 
     public function addField($f, $defaults = [])
     {
+        if (isset($defaults['never_persist']) && $defaults['never_persist']) {
+            return parent::addField($f, $defaults);
+        }
         $defaults[0] = $f;
         return $this->add($this->master_model->getElement($f), $defaults);
     }
@@ -164,7 +174,7 @@ class GroupModel extends \atk4\data\Model
             case 'select':
                 // select but no need your fields
                 $query = $this->master_model->action($mode, [false]);
-                $query = $this->queryFields($query, $fields);
+                $query = $this->queryFields($query, array_merge($fields, $this->system_fields));
 
                 $this->addGrouping($query);
 

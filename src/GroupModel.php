@@ -121,9 +121,9 @@ class GroupModel extends \atk4\data\Model
         return $this;
     }
 
-    public function addCondition(...$args)
+    public function addCondition($field, $operator = NULL, $value = NULL)
     {
-        $this->master_model->addCondition(...$args);
+        $this->master_model->addCondition($field, $operator, $value);
 
         return $this;
     }

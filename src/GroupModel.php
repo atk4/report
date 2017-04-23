@@ -87,7 +87,7 @@ class GroupModel extends \atk4\data\Model
         foreach ($aggregate as $field=>$expr) {
 
             // field originally defined in the parent model
-            $field_object = $this->master_model->getElement($field);
+            $field_object = $this->master_model->hasElement($field); // use hasElement here!
 
             // can be used as part of expression
             $e = $this->expr($expr, [$field_object]);

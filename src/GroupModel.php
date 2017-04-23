@@ -1,4 +1,6 @@
 <?php
+// vim:ts=4:sw=4:et:fdm=marker:fdl=0
+
 namespace atk4\report;
 
 /**
@@ -25,44 +27,67 @@ namespace atk4\report;
  */
 class GroupModel extends \atk4\data\Model
 {
+    /**
+     * GroupModel should always be read-only.
+     *
+     * @var bool
+     */
     public $read_only = true;
 
+    /** @var \atk4\data\Model */
     public $master_model = null;
 
+    /** @var string */
     public $id_field = null;
 
+    /** @var array */
     public $group = null;
 
+    /** @var array */
     public $aggregate = [];
 
+    /** @var array */
     public $system_fields = [];
 
-    public function __construct(\atk4\data\Model $model, $opts = [])
+    /**
+     * Constructor.
+     *
+     * @param \atk4\data\Model $model
+     * @param array            $defaults
+     *
+     * @return GroupModel
+     */
+    public function __construct(\atk4\data\Model $model, $defaults = [])
     {
         $this->master_model = $model;
         $this->table = $model->table;
 
         //$this->_default_class_addExpression = $model->_default_class_addExpression;
-        return parent::__construct($model->persistence);
+        return parent::__construct($model->persistence, $defaults);
     }
 
     /**
-     * Specify a single field or array of fields
+     * Specify a single field or array of fields on which we will group model.
+     *
+     * @param array $group Array of field names
+     * @param array $aggregate Array of aggregate mapping
+     *
+     * @return $this
      */
     public function groupBy($group, $aggregate = [])
     {
-        $this->aggregate = $aggregate;
         $this->group = $group;
+        $this->aggregate = $aggregate;
 
         $this->system_fields = array_merge($this->system_fields, $group);
-        foreach($group as $field) {
+        foreach ($group as $field) {
             $this->addField($field);
         }
 
         foreach ($aggregate as $field=>$expr) {
 
             // field originally defined in the parent model
-            $field_object = $this->master_model->hasElement($field);
+            $field_object = $this->master_model->hasElement($field); // use hasElement here!
 
             // can be used as part of expression
             $e = $this->expr($expr, [$field_object]);
@@ -74,34 +99,56 @@ class GroupModel extends \atk4\data\Model
         return $this;
     }
 
-    public function getRef($x)
+    /**
+     * Return reference field.
+     *
+     * @param string $link
+     *
+     * @return Field
+     */
+    public function getRef($link)
     {
-        return $this->master_model->getRef($x);
-    }
-
-    public function addField($f, $defaults = [])
-    {
-        if (isset($defaults['never_persist']) && $defaults['never_persist']) {
-            return parent::addField($f, $defaults);
-        }
-        $defaults[0] = $f;
-        return $this->add($this->master_model->getElement($f), $defaults);
+        return $this->master_model->getRef($link);
     }
 
     /**
-     * Given a query, will add safe fields in
+     * Adds new field into model.
+     *
+     * @param string $name
+     * @param array  $defaults
+     *
+     * @return Field
+     */
+    public function addField($name, $defaults = [])
+    {
+        if (isset($defaults['never_persist']) && $defaults['never_persist']) {
+            return parent::addField($name, $defaults);
+        }
+        $defaults[0] = $name;
+
+        return $this->add($this->master_model->getElement($name), $defaults);
+    }
+
+    /**
+     * Given a query, will add safe fields in.
+     *
+     * @param \atk4\dsql\Query $query
+     * @param array            $fields
+     *
+     * @return \atk4\dsql\Query
      */
     public function queryFields($query, $fields = [])
     {
         $this->persistence->initQueryFields($this, $query, $fields);
-        /*
-        foreach($this->elements as $el) {
-        }
-         */
 
         return $query;
     }
 
+    /**
+     * Adds grouping in query.
+     *
+     * @param \atk4\dsql\Query $query
+     */
     public function addGrouping($query)
     {
         foreach ($this->group as $field) {
@@ -114,6 +161,31 @@ class GroupModel extends \atk4\data\Model
         }
     }
 
+    /**
+     * Adds condition.
+     *
+     * @param mixed ...$args
+     *
+     * @return $this
+     *
+     * @todo Incorrect implementation
+     */
+    public function addCondition($field, $operator = null, $value = null)
+    {
+        $this->master_model->addCondition($field, $operator, $value);
+
+        return $this;
+    }
+
+    /**
+     * Sets limit.
+     *
+     * @param mixed ...$args
+     *
+     * @return $this
+     *
+     * @todo Incorrect implementation
+     */
     public function setLimit($count, $offset = null)
     {
         $this->master_model->setLimit($count, $offset);
@@ -121,13 +193,15 @@ class GroupModel extends \atk4\data\Model
         return $this;
     }
 
-    public function addCondition($field, $operator = NULL, $value = NULL)
-    {
-        $this->master_model->addCondition($field, $operator, $value);
-
-        return $this;
-    }
-
+    /**
+     * Sets order.
+     *
+     * @param mixed ...$args
+     *
+     * @return $this
+     *
+     * @todo Incorrect implementation
+     */
     public function setOrder($field, $desc = null)
     {
         $this->master_model->setOrder($field, $desc);
@@ -135,6 +209,14 @@ class GroupModel extends \atk4\data\Model
         return $this;
     }
 
+    /**
+     * Set action.
+     *
+     * @param string $mode
+     * @param array  $args
+     *
+     * @return \atk4\dsql\Query
+     */
     public function action($mode, $args = [])
     {
         switch ($mode) {
@@ -233,4 +315,22 @@ class GroupModel extends \atk4\data\Model
         $query->reset('table')->table($subquery);
         return $query;
     }
+
+    // {{{ Debug Methods
+
+    /**
+     * Returns array with useful debug info for var_dump.
+     *
+     * @return array
+     */
+    public function __debugInfo()
+    {
+        return array_merge(parent::__debugInfo(), [
+            'group' => $this->group,
+            'aggregate' => $this->aggregate,
+            'master_model' => $this->master_model->__debugInfo(),
+        ]);
+    }
+
+    // }}}
 }

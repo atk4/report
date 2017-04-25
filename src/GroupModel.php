@@ -243,10 +243,9 @@ class GroupModel extends \atk4\data\Model
                 $query = $this->queryFields($query, array_merge($fields, $this->system_fields));
 
                 $this->addGrouping($query);
+                $this->initQueryConditions($query);
 
                 $this->hook('afterGroupSelect', [$query]);
-
-                $this->initQueryConditions($query);
 
                 return $query;
 

@@ -9,7 +9,7 @@ class Invoice extends \atk4\data\Model
         parent::init();
         $this->addField('name');
 
-        $this->hasOne('client_id', 'Client');
+        $this->hasOne('client_id', new Client());
         $this->addField('amount', ['money'=>true]);
     }
 }

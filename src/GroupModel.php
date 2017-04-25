@@ -65,7 +65,7 @@ class GroupModel extends \atk4\data\Model
             $field_object = $this->master_model->hasElement($field);
 
             // can be used as part of expression
-            $e = $this->expr($expr, [$field_object]);
+            $e = $this->master_model->expr($expr, [$field_object]);
 
             // now add the expressions here
             $field_object = $this->addExpression($field, $e);
@@ -117,13 +117,6 @@ class GroupModel extends \atk4\data\Model
     public function setLimit($count, $offset = null)
     {
         $this->master_model->setLimit($count, $offset);
-
-        return $this;
-    }
-
-    public function addCondition($field, $operator = NULL, $value = NULL)
-    {
-        $this->master_model->addCondition($field, $operator, $value);
 
         return $this;
     }
@@ -180,6 +173,9 @@ class GroupModel extends \atk4\data\Model
 
                 $this->hook('afterGroupSelect', [$query]);
 
+                $this->initQueryConditions($query);
+                //$this->persistence->setLimitOrder($this, $query);
+
                 return $query;
 
             case 'count':
@@ -233,4 +229,57 @@ class GroupModel extends \atk4\data\Model
         $query->reset('table')->table($subquery);
         return $query;
     }
+    function initQueryConditions($q)
+    {
+        $m = $this;
+        if (!isset($m->conditions)) {
+            // no conditions are set in the model
+            return $q;
+        }
+
+        foreach ($m->conditions as $cond) {
+
+            // Options here are:
+            // count($cond) == 1, we will pass the only
+            // parameter inside where()
+
+            if (count($cond) == 1) {
+
+                // OR conditions
+                if (is_array($cond[0])) {
+                    foreach ($cond[0] as &$row) {
+                        if (is_string($row[0])) {
+                            $row[0] = $m->getElement($row[0]);
+                        }
+                    }
+                }
+
+                $q->where($cond[0]);
+                continue;
+            }
+
+            if (is_string($cond[0])) {
+                $cond[0] = $m->getElement($cond[0]);
+            }
+
+            if (count($cond) == 2) {
+                if ($cond[0] instanceof \atk4\data\Field) {
+                    $cond[1] = $this->persistence->typecastSaveField($cond[0], $cond[1]);
+                    $q->having($cond[0]->actual ?: $cond[0]->short_name, $cond[1]);
+                } else {
+                    $q->where($cond[0], $cond[1]);
+                }
+            } else {
+                if ($cond[0] instanceof \atk4\data\Field) {
+                    $cond[2] = $this->persistence->typecastSaveField($cond[0], $cond[2]);
+                    $q->having($cond[0]->actual ?: $cond[0]->short_name, $cond[1], $cond[2]);
+                } else {
+                    $q->where($cond[0], $cond[1], $cond[2]);
+                }
+            }
+        }
+
+        return $q;
+    }
+
 }

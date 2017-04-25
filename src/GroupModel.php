@@ -174,7 +174,6 @@ class GroupModel extends \atk4\data\Model
                 $this->hook('afterGroupSelect', [$query]);
 
                 $this->initQueryConditions($query);
-                //$this->persistence->setLimitOrder($this, $query);
 
                 return $query;
 

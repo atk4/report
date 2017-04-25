@@ -187,4 +187,38 @@ class GroupTest extends \atk4\schema\PHPUnit_SchemaTestCase
             $g->export()
         );
     }
+
+    public function testGroupLimit()
+    {
+        $g = $this->g;
+
+        $g->groupBy(['client_id'], [
+            'amount'=>'sum([])',
+        ]);
+        $g->setLimit(1);
+
+        $this->assertEquals(
+            [
+                ['client'=>'Vinny','client_id'=>1, 'amount'=>19],
+            ],
+            $g->export()
+        );
+    }
+
+    public function testGroupLimit2()
+    {
+        $g = $this->g;
+
+        $g->groupBy(['client_id'], [
+            'amount'=>'sum([])',
+        ]);
+        $g->setLimit(1, 1);
+
+        $this->assertEquals(
+            [
+                ['client'=>'Zoe','client_id'=>2, 'amount'=>4],
+            ],
+            $g->export()
+        );
+    }
 }

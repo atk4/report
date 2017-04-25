@@ -1,4 +1,6 @@
 <?php
+// vim:ts=4:sw=4:et:fdm=marker:fdl=0
+
 namespace atk4\report;
 
 /**
@@ -14,6 +16,8 @@ class UnionModel extends \atk4\data\Model
 {
     /**
      * UnionModel should always be read-only.
+     *
+     * @var bool
      */
     public $read_only = true;
 
@@ -21,6 +25,8 @@ class UnionModel extends \atk4\data\Model
      * Contain array of array containing model and mappings:
      *
      * $union = [ [ $m1, ['amount'=>'total_gross'] ] , [$m2, []] ];
+     *
+     * @var array
      */
     public $union = [];
 
@@ -30,6 +36,8 @@ class UnionModel extends \atk4\data\Model
      *
      * If you can define unique ID field, you can specify it inside your
      * union model.
+     *
+     * @var string
      */
     public $id_field = null;
 
@@ -37,7 +45,9 @@ class UnionModel extends \atk4\data\Model
      * When aggregation happens, this field will contain list of fields
      * we use in groupBy. Multiple fields can be in the array. All
      * the remaining fields will be hidden (marked as system()) and
-     * have their "aggregates" added into the selectQuery (if possible)
+     * have their "aggregates" added into the selectQuery (if possible).
+     *
+     * @var array|string
      */
     public $group = null;
 
@@ -46,20 +56,23 @@ class UnionModel extends \atk4\data\Model
      * fields, e.g. 'balance'=>['sum', 'amount'];
      *
      * You can also use Expression instead of array.
+     *
+     * @var array
      */
     public $aggregate = [];
 
+    /** @var string Derived table alias */
     public $table = 'derivedTable';
 
     /**
-     * Will be initialized during the first query and then subsequently used
-     * as a FROM value when executing action()'s
-     */
-    //public $table_expr = null;
-
-    /**
      * For a sub-model with a specified mapping, return expression
-     * that represents a field
+     * that represents a field.
+     *
+     * @param \atk4\data\Model $model
+     * @param string           $field
+     * @param string           $expr
+     *
+     * @return \atk4\data\Field
      */
     public function getFieldExpr($model, $field, $expr = null)
     {
@@ -79,7 +92,11 @@ class UnionModel extends \atk4\data\Model
 
     /**
      * Configures nested models no have a specified set of fields
-     * available
+     * available.
+     *
+     * @param array $fields
+     *
+     * @return \atk4\dsql\Expression
      */
     public function getSubQuery($fields)
     {
@@ -182,10 +199,18 @@ class UnionModel extends \atk4\data\Model
             }
             $args[$cnt++] = $q;
         }
-        $args[$cnt] = 'derivedTable';
+        $args[$cnt] = $this->table;
         return $this->persistence->dsql()->expr('('.join(' UNION ALL ',$expr).') {'.$cnt.'}', $args);
     }
 
+    /**
+     * No description.
+     *
+     * @param string $action
+     * @param array  $act_arg
+     *
+     * @return \atk4\dsql\Expression
+     */
     public function getSubAction($action, $act_arg=[])
     {
         $cnt = 0;
@@ -212,10 +237,18 @@ class UnionModel extends \atk4\data\Model
 
             $args[$cnt++] = $q;
         }
-        $args[$cnt] = 'derivedTable';
+        $args[$cnt] = $this->table;
         return $this->persistence->dsql()->expr('('.join(' UNION ALL ',$expr).') {'.$cnt.'}', $args);
     }
 
+    /**
+     * No description.
+     *
+     * @param string $mode
+     * @param array  $args
+     *
+     * @return \atk4\dsql\Expression
+     */
     public function action($mode, $args = [])
     {
         switch ($mode) {
@@ -308,7 +341,13 @@ class UnionModel extends \atk4\data\Model
         return $query;
     }
 
-
+    /**
+     * Export model.
+     *
+     * @param array $fields
+     *
+     * @return array
+     */
     public function export($fields = null)
     {
         if ($fields) {
@@ -323,6 +362,14 @@ class UnionModel extends \atk4\data\Model
         return $data;
     }
 
+    /**
+     * Adds nested model in union.
+     *
+     * @param string|\atk4\data\Model $class Model.
+     * @param array                   $mapping Array of field mapping
+     *
+     * @return \atk4\data\Model
+     */
     public function addNestedModel($class, $mapping = [])
     {
         $m = $this->persistence->add($class);
@@ -332,7 +379,12 @@ class UnionModel extends \atk4\data\Model
     }
 
     /**
-     * Specify a single field or array of fields
+     * Specify a single field or array of fields.
+     *
+     * @param string|array $group
+     * @param array        $aggregate
+     *
+     * @return $this
      */
     public function groupBy($group, $aggregate = [])
     {
@@ -363,6 +415,18 @@ class UnionModel extends \atk4\data\Model
         return $this;
     }
 
+    /**
+     * Adds condition.
+     *
+     * If UnionModel has such field, then add condition to it.
+     * Otherwise adds condition to all nested models.
+     *
+     * @param string $field
+     * @param mixed  $operator
+     * @param mixed  $value
+     *
+     * @return $this
+     */
     public function addCondition($field, $operator = null, $value = null)
     {
         if (func_num_args() == 1) {
@@ -371,9 +435,7 @@ class UnionModel extends \atk4\data\Model
 
         // if UnionModel has such field, then add condition to it
         if ($f = $this->hasElement($field)) {
-            //if($f->join) {
-                return parent::addCondition(...func_get_args());
-            //}
+            return parent::addCondition(...func_get_args());
         }
 
         // otherwise add condition in all sub-models
@@ -423,9 +485,11 @@ class UnionModel extends \atk4\data\Model
             );
         }
 
-        $arr = array_merge(parent::__debugInfo(), ['union_models' => $arr]);
-
-        return $arr;
+        return array_merge(parent::__debugInfo(), [
+            'group' => $this->group,
+            'aggregate' => $this->aggregate,
+            'union_models' => $arr,
+        ]);
     }
 
     // }}}

@@ -83,7 +83,7 @@ class UnionModel extends \atk4\data\Model
         }
 
         // Some fields are re-mapped for this nested model
-        if ($expr) {
+        if ($expr !== null) {
             $field_object = $model->expr($expr, [$field_object]);
         }
 

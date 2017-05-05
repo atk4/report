@@ -79,7 +79,7 @@ class GroupModel extends \atk4\data\Model
         $this->group = $group;
         $this->aggregate = $aggregate;
 
-        $this->system_fields = array_merge($this->system_fields, $group);
+        $this->system_fields = array_unique($this->system_fields + $group);
         foreach ($group as $field) {
             $this->addField($field);
         }
@@ -240,7 +240,7 @@ class GroupModel extends \atk4\data\Model
             case 'select':
                 // select but no need your fields
                 $query = $this->master_model->action($mode, [false]);
-                $query = $this->queryFields($query, array_merge($fields, $this->system_fields));
+                $query = $this->queryFields($query, array_unique($fields + $this->system_fields));
 
                 $this->addGrouping($query);
                 $this->initQueryConditions($query);

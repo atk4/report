@@ -427,14 +427,14 @@ class UnionModel extends \atk4\data\Model
      *
      * @return $this
      */
-    public function addCondition($field, $operator = null, $value = null)
+    public function addCondition($field, $operator = null, $value = null, $force_nested = false)
     {
         if (func_num_args() == 1) {
             return parent::addCondition($field);
         }
 
         // if UnionModel has such field, then add condition to it
-        if ($f = $this->hasElement($field)) {
+        if (($f = $this->hasElement($field)) && !$force_nested) {
             return parent::addCondition(...func_get_args());
         }
 
@@ -456,6 +456,7 @@ class UnionModel extends \atk4\data\Model
                         $model->addCondition($ff, $operator);
                         break;
                     case 3:
+                    case 4:
                         $model->addCondition($ff, $operator, $value);
                         break;
                 }

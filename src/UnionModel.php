@@ -132,7 +132,9 @@ class UnionModel extends \atk4\data\Model
                         continue;
                     }
 
-                    $field_object = $this->getFieldExpr($model, $field, isset($mapping[$field]) ? $mapping[$field] : null);
+                    $field_alias = $this->getElement($field)->actual ?: $field;
+                    $field_alias = isset($mapping[$field_alias]) ? $mapping[$field_alias] : null;
+                    $field_object = $this->getFieldExpr($model, $field, $field_alias);
 
                     if (isset($this->aggregate[$field])) {
                         $field_object = $model->expr($this->aggregate[$field], [$field_object]);

@@ -1,8 +1,8 @@
-# Agile Data - Reportig Add-on
+# Agile Data - Reporting Add-on
 
 This extension for Agile Data implements advanced reporting capabilities:
 
--   Aggregate models. Provite grouping of existing model.
+-   Aggregate models. Provide grouping of existing model.
 -   Union models. Combine one or multiple models.
 
 ## Documentation

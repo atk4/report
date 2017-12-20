@@ -78,11 +78,6 @@ $m->getElement('total')->type = 'money';
 
 https://github.com/atk4/report/blob/develop/docs/index.md
 
-
-``` console
-composer install
-```
-
 ## Current Status
 
 Implementation is complete, but a better documentation and more examples needed. Also some cleanups in the code are welcome!

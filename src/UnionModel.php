@@ -187,8 +187,8 @@ class UnionModel extends \atk4\data\Model
                     foreach ($this->group as $gr) {
                         if (isset($mapping[$gr])) {
                             $q->group($model->expr($mapping[$gr]));
-                        } else {
-                            $q->group($model->getElement($gr));
+                        } elseif ($f = $model->hasElement($gr)) {
+                            $q->group($f);
                         }
                     }
                 } elseif (isset($mapping[$this->group])) {

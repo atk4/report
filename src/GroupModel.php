@@ -252,13 +252,13 @@ class GroupModel extends \atk4\data\Model
             case 'count':
                 $query = $this->master_model->action($mode, $args);
 
-                $query->reset('field')->field(new \atk4\dsql\Expression('"1"'));
+                $query->reset('field')->field($this->expr('1');
                 $this->addGrouping($query);
 
                 $this->hook('afterGroupSelect', [$query]);
 
                 $q = $query->dsql();
-                $q->table(new \atk4\dsql\Expression("([]) der", [$query]));
+                $q->table($this->expr("([]) der", [$query]));
                 $q->field('count(*)');
 
                 return $q;
@@ -282,7 +282,7 @@ class GroupModel extends \atk4\data\Model
 
                 $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias'=>'val']);
 
-                $query = parent::action('fx', [$args[0], new \atk4\dsql\Expression('`val`')]);
+                $query = parent::action('fx', [$args[0], $this->expr('val')]);
                 $query->reset('table')->table($subquery);
 
                 return $query;

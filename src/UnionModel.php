@@ -126,7 +126,7 @@ class UnionModel extends \atk4\data\Model
                     }
 
                     // Union can have some fields defined
-                    // as expressions. We don't toch those
+                    // as expressions. We don't touch those
                     // either
                     if ($this->getElement($field) instanceof \atk4\data\Field_SQL_Expression && !isset($this->aggregate[$field])) {
                         continue;
@@ -218,7 +218,6 @@ class UnionModel extends \atk4\data\Model
         $args = [];
 
         foreach ($this->union as list($model, $mapping)) {
-
             // now prepare query
             $expr[] = '['.$cnt.']';
             if ($act_arg && isset($act_arg[1])) {
@@ -300,7 +299,9 @@ class UnionModel extends \atk4\data\Model
             case 'count':
                 $subquery = $this->getSubAction('count', ['alias'=>'cnt']);
 
-                $query = parent::action('fx', ['sum', new \atk4\dsql\Expression('`cnt`')]);
+                //$query = parent::action('fx', ['sum', new \atk4\dsql\Expression('`cnt`')]);
+                // change NOT TESTED !!!
+                $query = parent::action('fx', ['sum', $this->expr('cnt')]);
                 $query->reset('table')->table($subquery);
                 return $query;
 
@@ -323,7 +324,9 @@ class UnionModel extends \atk4\data\Model
 
                 $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias'=>'val']);
 
-                $query = parent::action('fx', [$args[0], new \atk4\dsql\Expression('`val`')]);
+                //$query = parent::action('fx', [$args[0], new \atk4\dsql\Expression('`val`')]);
+                // change NOT TESTED !!!
+                $query = parent::action('fx', [$args[0], $this->expr('val')]);
                 $query->reset('table')->table($subquery);
                 return $query;
 

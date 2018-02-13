@@ -252,7 +252,7 @@ class GroupModel extends \atk4\data\Model
             case 'count':
                 $query = $this->master_model->action($mode, $args);
 
-                $query->reset('field')->field($this->expr('1');
+                $query->reset('field')->field($this->expr('1'));
                 $this->addGrouping($query);
 
                 $this->hook('afterGroupSelect', [$query]);

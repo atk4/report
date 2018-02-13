@@ -427,6 +427,7 @@ class UnionModel extends \atk4\data\Model
      * @param string $field
      * @param mixed  $operator
      * @param mixed  $value
+     * @param bool   $force_nested Should we add condition to all nested models?
      *
      * @return $this
      */

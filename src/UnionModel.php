@@ -125,9 +125,9 @@ class UnionModel extends \atk4\data\Model
                         continue;
                     }
 
-                    // Union can have some fields defined
-                    // as expressions. We don't touch those
-                    // either
+                    // Union can have some fields defined as expressions. We don't touch those either.
+                    // Imants: I have no idea why this condition was set, but it's limiting our ability
+                    // to use expression fields in mapping
                     if ($this->getElement($field) instanceof \atk4\data\Field_SQL_Expression && !isset($this->aggregate[$field])) {
                         continue;
                     }
@@ -143,7 +143,7 @@ class UnionModel extends \atk4\data\Model
                         $model->aggregates_applied = [];
                     }
 
-                    if($field_object instanceof \atk4\data\Expression && !in_array($field, $model->aggregates_applied))
+                    if($field_object instanceof \atk4\data\Field_SQL_Expression && !in_array($field, $model->aggregates_applied))
                     {
                         // generate query
 
@@ -272,9 +272,6 @@ class UnionModel extends \atk4\data\Model
         $fields2 = [];
         foreach ($fields as $field) {
             if ($this->getElement($field)->never_persist) {
-                continue;
-            }
-            if ($this->getElement($field) instanceof \atk4\data\Expression_SQL) {
                 continue;
             }
             $fields2[] = $field;

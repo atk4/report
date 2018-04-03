@@ -237,6 +237,7 @@ class UnionModel extends \atk4\data\Model
             $args[$cnt++] = $q;
         }
         $args[$cnt] = $this->table;
+
         return $this->persistence->dsql()->expr('('.join(' UNION ALL ',$expr).') {'.$cnt.'}', $args);
     }
 
@@ -295,10 +296,7 @@ class UnionModel extends \atk4\data\Model
 
             case 'count':
                 $subquery = $this->getSubAction('count', ['alias'=>'cnt']);
-
-                //$query = parent::action('fx', ['sum', new \atk4\dsql\Expression('`cnt`')]);
-                // change NOT TESTED !!!
-                $query = parent::action('fx', ['sum', $this->expr('cnt')]);
+                $query = parent::action('fx', ['sum', 'cnt']);
                 $query->reset('table')->table($subquery);
                 return $query;
 
@@ -320,10 +318,7 @@ class UnionModel extends \atk4\data\Model
             case 'fx':
 
                 $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias'=>'val']);
-
-                //$query = parent::action('fx', [$args[0], new \atk4\dsql\Expression('`val`')]);
-                // change NOT TESTED !!!
-                $query = parent::action('fx', [$args[0], $this->expr('val')]);
+                $query = parent::action('fx', [$args[0], $this->expr('val')]); // ??? shouldn't this be simply 'val'
                 $query->reset('table')->table($subquery);
                 return $query;
 

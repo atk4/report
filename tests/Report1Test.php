@@ -1,7 +1,5 @@
 <?php
-
 namespace atk4\report\tests;
-
 
 /**
  * Tests basic create, update and delete operatiotns
@@ -9,7 +7,7 @@ namespace atk4\report\tests;
 class Report1Test extends \atk4\schema\PHPUnit_SchemaTestCase
 {
 
-    private $init_db = 
+    private $init_db =
         [
             'client' => [
                 ['name' => 'Vinny'],
@@ -28,9 +26,13 @@ class Report1Test extends \atk4\schema\PHPUnit_SchemaTestCase
 
     protected $g;
 
-    function setUp() {
+    public function setUp()
+    {
         parent::setUp();
-        $m1 = new Invoice($this->db);
+
+        $this->setDB($this->init_db);
+
+        $m1 = new Model\Invoice($this->db);
         $m1->getRef('client_id')->addTitle();
         $this->g = new \atk4\report\GroupModel($m1);
         $this->g->addField('client');
@@ -40,7 +42,7 @@ class Report1Test extends \atk4\schema\PHPUnit_SchemaTestCase
     {
         $g = $this->g;
 
-        $g->groupBy(['clienit_id'], ['c'=>'count(*)']);
+        $g->groupBy(['client_id'], ['c'=>'count(*)']);
 
         $this->assertEquals(
             [

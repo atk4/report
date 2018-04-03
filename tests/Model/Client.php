@@ -1,13 +1,14 @@
 <?php
+namespace atk4\report\tests\Model;
 
-namespace atk4\report\tests;
-
-class Client extends \atk4\data\Model 
+class Client extends \atk4\data\Model
 {
     public $table = 'client';
 
-    function init() {
+    public function init()
+    {
         parent::init();
+
         $this->addField('name');
 
         $this->hasMany('Payment', new Payment());

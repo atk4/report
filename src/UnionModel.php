@@ -446,12 +446,18 @@ class UnionModel extends \atk4\data\Model
                 if (isset($mapping[$field])) {
                     $ff = $mapping[$field];
                 }
+                /*
                 if ($ff[0] == '[') {
                     $ff = substr($ff, 1, -1);
                 }
                 if (!$model->hasElement($ff)) {
                     continue;
                 }
+                */
+                if (is_string($ff)) {
+                    $ff = $model->expr($ff);
+                }
+
                 switch (func_num_args()) {
                     case 2:
                         $model->addCondition($ff, $operator);

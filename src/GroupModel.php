@@ -106,7 +106,7 @@ class GroupModel extends \atk4\data\Model
      *
      * @return Field
      */
-    public function getRef($link)
+    public function getRef($link) : \atk4\data\Reference
     {
         return $this->master_model->getRef($link);
     }

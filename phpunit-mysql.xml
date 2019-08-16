@@ -1,9 +1,9 @@
 <phpunit colors="true" bootstrap="vendor/autoload.php" printerClass="atk4\core\PHPUnit_AgileResultPrinter">
     <php>
-        <var name="DB_DSN" value="sqlite::memory:" />
+        <var name="DB_DSN" value="mysql:dbname=report_test;host=localhost" />
         <var name="DB_USER" value="travis" />
         <var name="DB_PASSWD" value="" />
-        <var name="DB_DBNAME" value="dsql_test" />
+        <var name="DB_DBNAME" value="report_test" />
     </php>
     <filter>
         <blacklist>
@@ -19,6 +19,6 @@
         </testsuite>
     </testsuites>
     <logging>
-        <log type="coverage-php" target="build/logs/clover.cov"/>
+        <log type="coverage-php" target="build/logs/clover-mysql.cov"/>
     </logging>
 </phpunit>

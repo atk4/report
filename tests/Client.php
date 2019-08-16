@@ -2,7 +2,9 @@
 
 namespace atk4\report\tests;
 
-class Client extends \atk4\data\Model 
+use atk4\data\Model;
+
+class Client extends Model
 {
     public $table = 'client';
 

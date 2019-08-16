@@ -1,7 +1,9 @@
 <?php
 
 namespace atk4\report\tests;
-class Transaction2 extends \atk4\report\UnionModel 
+use atk4\report\UnionModel;
+
+class Transaction2 extends UnionModel
 {
     function init() {
         parent::init();

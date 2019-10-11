@@ -87,7 +87,7 @@ class GroupModel extends \atk4\data\Model
         foreach ($aggregate as $field=>$expr) {
 
             // field originally defined in the parent model
-            $field_object = $this->master_model->hasElement($field); // use hasElement here!
+            $field_object = $this->master_model->hasField($field); // use hasField here!
 
             // can be used as part of expression
             $e = $this->master_model->expr($expr, [$field_object]);
@@ -126,7 +126,7 @@ class GroupModel extends \atk4\data\Model
         }
         $defaults[0] = $name;
 
-        return $this->add($this->master_model->getElement($name), $defaults);
+        return $this->add($this->master_model->getField($name), $defaults);
     }
 
     /**
@@ -152,7 +152,7 @@ class GroupModel extends \atk4\data\Model
     public function addGrouping($query)
     {
         foreach ($this->group as $field) {
-            $el = $this->master_model->hasElement($field);
+            $el = $this->master_model->hasField($field);
             if ($el) {
                 $query->group($el);
             } else {
@@ -225,10 +225,10 @@ class GroupModel extends \atk4\data\Model
 
         $fields2 = [];
         foreach ($fields as $field) {
-            if ($this->getElement($field)->never_persist) {
+            if ($this->getField($field)->never_persist) {
                 continue;
             }
-            if ($this->getElement($field) instanceof \atk4\data\Expression_SQL) {
+            if ($this->getField($field) instanceof \atk4\data\Expression_SQL) {
                 continue;
             }
             $fields2[] = $field;
@@ -325,7 +325,7 @@ class GroupModel extends \atk4\data\Model
                 if (is_array($cond[0])) {
                     foreach ($cond[0] as &$row) {
                         if (is_string($row[0])) {
-                            $row[0] = $m->getElement($row[0]);
+                            $row[0] = $m->getField($row[0]);
                         }
                     }
                 }
@@ -335,7 +335,7 @@ class GroupModel extends \atk4\data\Model
             }
 
             if (is_string($cond[0])) {
-                $cond[0] = $m->getElement($cond[0]);
+                $cond[0] = $m->getField($cond[0]);
             }
 
             if (count($cond) == 2) {

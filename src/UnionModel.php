@@ -348,7 +348,7 @@ class UnionModel extends \atk4\data\Model
      *
      * @return array
      */
-    public function export($fields = null)
+    public function export($fields = null, $key_field = null, $typecast_data = true)
     {
         if ($fields) {
             $this->onlyFields($fields);

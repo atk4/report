@@ -1,9 +1,11 @@
 <?php
 
 namespace atk4\report\tests;
+
 class Transaction extends \atk4\report\UnionModel 
 {
-    function init() {
+    public function init()
+    {
         parent::init();
 
         // first lets define nested models

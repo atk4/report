@@ -30,6 +30,8 @@ class GroupTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     function setUp() {
         parent::setUp();
+        $this->setDB($this->init_db);
+
         $m1 = new Invoice($this->db);
         $m1->getRef('client_id')->addTitle();
         $this->g = new \atk4\report\GroupModel($m1);
@@ -56,7 +58,6 @@ class GroupTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            //'s'=>'sum([amount])',
             'amount'=>'sum([])',
         ]);
 
@@ -75,13 +76,14 @@ class GroupTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         $g->groupBy(['client_id'], [
             's'=>'sum([amount])',
+            'm'=>'max([amount])',
             'amount'=>'sum([])',
         ]);
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'amount'=>19, 's'=>19],
-                ['client'=>'Zoe','client_id'=>2, 'amount'=>4, 's'=>4],
+                ['client'=>'Vinny','client_id'=>1, 'amount'=>19, 's'=>19, 'm'=>15],
+                ['client'=>'Zoe','client_id'=>2, 'amount'=>4, 's'=>4, 'm'=>4],
             ],
             $g->export()
         );

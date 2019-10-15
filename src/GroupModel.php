@@ -41,7 +41,7 @@ class GroupModel extends \atk4\data\Model
     public $id_field = null;
 
     /** @var array */
-    public $group = null;
+    public $group = [];
 
     /** @var array */
     public $aggregate = [];
@@ -114,19 +114,27 @@ class GroupModel extends \atk4\data\Model
     /**
      * Adds new field into model.
      *
-     * @param string $name
-     * @param array  $defaults
+     * @param string       $name
+     * @param array|object $defaults
      *
      * @return Field
      */
     public function addField($name, $defaults = [])
     {
-        if (isset($defaults['never_persist']) && $defaults['never_persist']) {
+        if (!is_array($defaults)) {
+            $defaults = [$defaults];
+        }
+    
+        if (
+            isset($defaults[0]) && $defaults[0] instanceof \atk4\data\Field_SQL_Expression
+            || isset($defaults['never_persist']) && $defaults['never_persist']
+        ) {
             return parent::addField($name, $defaults);
         }
-        $defaults[0] = $name;
+        
+        $field = $this->master_model->hasField($name);
 
-        return $this->add($this->master_model->getField($name), $defaults);
+        return parent::addField($name, $field ? array_merge([$field], $defaults) : $defaults);
     }
 
     /**
@@ -210,30 +218,22 @@ class GroupModel extends \atk4\data\Model
                 throw new Exception(['GroupModel does not support this action', 'action'=>$mode]);
         }
 
-        if (!$this->only_fields) {
-            $fields = [];
+        // get list of available fields
+        $available_fields = $this->only_fields ?: array_keys($this->getFields());
 
-            // get list of available fields
-            foreach ($this->elements as $key=>$f) {
-                if ($f instanceof \atk4\data\Field) {
-                    $fields[] = $key;
-                }
-            }
-        } else {
-            $fields = $this->only_fields;
-        }
-
-        $fields2 = [];
-        foreach ($fields as $field) {
+        $fields = $available_fields;
+        /* Imants: I really don't have idea why we excluded expressions and never_persist fields before
+        $fields = [];
+        foreach ($available_fields as $field) {
             if ($this->getField($field)->never_persist) {
                 continue;
             }
-            if ($this->getField($field) instanceof \atk4\data\Expression_SQL) {
+            if ($this->getField($field) instanceof \atk4\data\Field_SQL_Expression) {
                 continue;
             }
-            $fields2[] = $field;
+            $fields[] = $field;
         }
-        $fields = $fields2;
+        */
 
         $subquery = null;
         switch ($mode) {

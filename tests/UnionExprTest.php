@@ -231,7 +231,6 @@ class UnionExprTest extends \atk4\schema\PHPUnit_SchemaTestCase
             'UNION ALL (select sum(`amount`) `val` from `payment` where `client_id` = :b)) `derivedTable`',
             $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->render()
         );
-
     }
 
     /**

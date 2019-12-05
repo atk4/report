@@ -28,6 +28,8 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     function setUp() {
         parent::setUp();
+        $this->setDB($this->init_db);
+
         $this->t = new Transaction($this->db);
     }
 

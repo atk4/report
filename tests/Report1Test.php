@@ -30,6 +30,8 @@ class Report1Test extends \atk4\schema\PHPUnit_SchemaTestCase
 
     function setUp() {
         parent::setUp();
+        $this->setDB($this->init_db);
+
         $m1 = new Invoice($this->db);
         $m1->getRef('client_id')->addTitle();
         $this->g = new \atk4\report\GroupModel($m1);
@@ -40,7 +42,7 @@ class Report1Test extends \atk4\schema\PHPUnit_SchemaTestCase
     {
         $g = $this->g;
 
-        $g->groupBy(['clienit_id'], ['c'=>'count(*)']);
+        $g->groupBy(['client_id'], ['c'=>'count(*)']);
 
         $this->assertEquals(
             [

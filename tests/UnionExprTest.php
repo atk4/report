@@ -2,11 +2,12 @@
 
 namespace atk4\report\tests;
 
+use atk4\schema\PHPUnit_SchemaTestCase;
 
 /**
  * Tests basic create, update and delete operatiotns
  */
-class UnionExprTest extends \atk4\schema\PHPUnit_SchemaTestCase
+class UnionExprTest extends PHPUnit_SchemaTestCase
 {
 
     private $init_db = 

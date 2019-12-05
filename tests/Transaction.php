@@ -2,7 +2,9 @@
 
 namespace atk4\report\tests;
 
-class Transaction extends \atk4\report\UnionModel 
+use atk4\report\UnionModel;
+
+class Transaction extends UnionModel 
 {
     public function init()
     {

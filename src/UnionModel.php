@@ -3,6 +3,11 @@
 
 namespace atk4\report;
 
+use atk4\data\Field;
+use atk4\data\Field_SQL_Expression;
+use atk4\data\Model;
+use atk4\dsql\Expression;
+
 /**
  * UnionModel combines multiple nested models through a UNION in order to retrieve
  * it's value set. The beauty of this class is that it will add fields transparently
@@ -12,7 +17,7 @@ namespace atk4\report;
  * For example if you are asking sum(amount), there is no need to fetch any extra
  * fields from sub-models.
  */
-class UnionModel extends \atk4\data\Model
+class UnionModel extends Model
 {
     /**
      * UnionModel should always be read-only.
@@ -68,15 +73,15 @@ class UnionModel extends \atk4\data\Model
      * For a sub-model with a specified mapping, return expression
      * that represents a field.
      *
-     * @param \atk4\data\Model $model
-     * @param string           $field
-     * @param string           $expr
+     * @param Model  $model
+     * @param string $field
+     * @param string $expr
      *
-     * @return \atk4\data\Field
+     * @return Field
      */
-    public function getFieldExpr($model, $field, $expr = null)
+    public function getFieldExpr(Model $model, $field, $expr = null)
     {
-        $field_object = $model->hasElement($field);
+        $field_object = $model->hasField($field);
 
         if (!$field_object) {
             $field_object = $this->expr('NULL');
@@ -91,14 +96,14 @@ class UnionModel extends \atk4\data\Model
     }
 
     /**
-     * Configures nested models no have a specified set of fields
+     * Configures nested models to have a specified set of fields
      * available.
      *
      * @param array $fields
      *
-     * @return \atk4\dsql\Expression
+     * @return Expression
      */
-    public function getSubQuery($fields)
+    public function getSubQuery($fields) : Expression
     {
         $cnt = 0;
         $expr = [];
@@ -115,24 +120,24 @@ class UnionModel extends \atk4\data\Model
                     // table/query and we don't touch those
                     // fields
 
-                    if (!$this->hasElement($field)) {
+                    if (!$this->hasField($field)) {
                         $field_object = $model->expr('NULL');
                         $f[$field] = $field_object;
                         continue;
                     }
 
-                    if ($this->getElement($field)->join || $this->getElement($field)->never_persist) {
+                    if ($this->getField($field)->join || $this->getField($field)->never_persist) {
                         continue;
                     }
 
                     // Union can have some fields defined as expressions. We don't touch those either.
                     // Imants: I have no idea why this condition was set, but it's limiting our ability
                     // to use expression fields in mapping
-                    if ($this->getElement($field) instanceof \atk4\data\Field_SQL_Expression && !isset($this->aggregate[$field])) {
+                    if ($this->getField($field) instanceof Field_SQL_Expression && !isset($this->aggregate[$field])) {
                         continue;
                     }
 
-                    $field_object = $this->getFieldExpr($model, $field, isset($mapping[$field]) ? $mapping[$field] : null);
+                    $field_object = $this->getFieldExpr($model, $field, $mapping[$field] ?? null);
 
                     if (isset($this->aggregate[$field])) {
                         $field_object = $model->expr($this->aggregate[$field], [$field_object]);
@@ -143,19 +148,19 @@ class UnionModel extends \atk4\data\Model
                         $model->aggregates_applied = [];
                     }
 
-                    if($field_object instanceof \atk4\data\Field_SQL_Expression && !in_array($field, $model->aggregates_applied))
+                    if($field_object instanceof Field_SQL_Expression && !in_array($field, $model->aggregates_applied))
                     {
                         // generate query
 
                         // replace original field with query
-                        if($model->hasElement($field)) {
-                            $model->getElement($field)->destroy();
+                        if($model->hasField($field)) {
+                            $model->removeField($field);
                         }
                         $field_object = $model->addExpression($field, $field_object);
 
                         $model->aggregates_applied[] = $field;
                     }
-                     */
+                    */
 
                     $f[$field] = $field_object;
                 } catch (\atk4\core\Exception $e) {
@@ -187,7 +192,7 @@ class UnionModel extends \atk4\data\Model
                     foreach ($this->group as $gr) {
                         if (isset($mapping[$gr])) {
                             $q->group($model->expr($mapping[$gr]));
-                        } elseif ($f = $model->hasElement($gr)) {
+                        } elseif ($f = $model->hasField($gr)) {
                             $q->group($f);
                         }
                     }
@@ -209,9 +214,9 @@ class UnionModel extends \atk4\data\Model
      * @param string $action
      * @param array  $act_arg
      *
-     * @return \atk4\dsql\Expression
+     * @return Expression
      */
-    public function getSubAction($action, $act_arg=[])
+    public function getSubAction($action, $act_arg=[]) : Expression
     {
         $cnt = 0;
         $expr = [];
@@ -225,9 +230,7 @@ class UnionModel extends \atk4\data\Model
                 $a[1] = $this->getFieldExpr(
                     $model,
                     $a[1],
-                    isset($mapping[$a[1]]) ?
-                    $mapping[$a[1]] :
-                    null
+                    isset($mapping[$a[1]]) ? $mapping[$a[1]] : null
                 );
                 $q = $model->action($action, $a);
             } else {
@@ -246,9 +249,9 @@ class UnionModel extends \atk4\data\Model
      * @param string $mode
      * @param array  $args
      *
-     * @return \atk4\dsql\Expression
+     * @return Expression
      */
-    public function action($mode, $args = [])
+    public function action($mode, $args = []) : Expression
     {
         switch ($mode) {
             case 'insert':
@@ -257,27 +260,13 @@ class UnionModel extends \atk4\data\Model
                 throw new Exception(['UnionModel does not support this action', 'action'=>$mode]);
         }
 
-        if (!$this->only_fields) {
-            $fields = [];
-
-            // get list of available fields
-            foreach ($this->elements as $key=>$f) {
-                if ($f instanceof \atk4\data\Field) {
-                    $fields[] = $key;
-                }
+        // get list of available fields
+        $fields = $this->only_fields ?: array_keys($this->getFields());
+        foreach ($fields as $k=>$field) {
+            if ($this->getField($field)->never_persist) {
+                unset($fields[$k]);
             }
-        } else {
-            $fields = $this->only_fields;
         }
-        $fields2 = [];
-        foreach ($fields as $field) {
-            if ($this->getElement($field)->never_persist) {
-                continue;
-            }
-            $fields2[] = $field;
-        }
-        $fields = $fields2;
-
 
         $subquery = null;
 
@@ -295,10 +284,7 @@ class UnionModel extends \atk4\data\Model
 
             case 'count':
                 $subquery = $this->getSubAction('count', ['alias'=>'cnt']);
-
-                //$query = parent::action('fx', ['sum', new \atk4\dsql\Expression('`cnt`')]);
-                // change NOT TESTED !!!
-                $query = parent::action('fx', ['sum', $this->expr('cnt')]);
+                $query = parent::action('fx', ['sum', $this->expr('{}', ['cnt'])]);
                 $query->reset('table')->table($subquery);
                 return $query;
 
@@ -318,12 +304,8 @@ class UnionModel extends \atk4\data\Model
                 break;
 
             case 'fx':
-
                 $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias'=>'val']);
-
-                //$query = parent::action('fx', [$args[0], new \atk4\dsql\Expression('`val`')]);
-                // change NOT TESTED !!!
-                $query = parent::action('fx', [$args[0], $this->expr('val')]);
+                $query = parent::action('fx', [$args[0], $this->expr('{}', ['val'])]);
                 $query->reset('table')->table($subquery);
                 return $query;
 
@@ -348,7 +330,7 @@ class UnionModel extends \atk4\data\Model
      *
      * @return array
      */
-    public function export($fields = null)
+    public function export($fields = null, $key_field = null, $typecast_data = true)
     {
         if ($fields) {
             $this->onlyFields($fields);
@@ -365,12 +347,12 @@ class UnionModel extends \atk4\data\Model
     /**
      * Adds nested model in union.
      *
-     * @param string|\atk4\data\Model $class Model.
-     * @param array                   $mapping Array of field mapping
+     * @param string|Model $class Model.
+     * @param array        $mapping Array of field mapping
      *
-     * @return \atk4\data\Model
+     * @return Model
      */
-    public function addNestedModel($class, $mapping = [])
+    public function addNestedModel($class, $mapping = []) : Model
     {
         $m = $this->persistence->add($class);
         $this->union[] = [$m, $mapping];
@@ -394,19 +376,19 @@ class UnionModel extends \atk4\data\Model
 
         foreach ($aggregate as $field=>$expr) {
 
-            $field_object = $this->hasElement($field);
+            $field_object = $this->hasField($field);
 
-            $e = $this->expr($expr, [$field_object]);
+            $expr = $this->expr($expr, [$field_object]);
 
             if ($field_object) {
-                $field_object->destroy();
+                $this->removeField($field);
             }
 
-            $field_object = $this->addExpression($field, $e);
+            $field_object = $this->addExpression($field, $expr);
         }
 
         foreach ($this->union as list($model, $mapping)) {
-            if ($model instanceof UnionModel) {
+            if ($model instanceof self) {
                 $model->aggregate = $aggregate;
                 $model->group = $group;
             }
@@ -430,17 +412,17 @@ class UnionModel extends \atk4\data\Model
      */
     public function addCondition($field, $operator = null, $value = null, $force_nested = false)
     {
-        if (func_num_args() == 1) {
+        if (func_num_args() === 1) {
             return parent::addCondition($field);
         }
 
         // if UnionModel has such field, then add condition to it
-        if (($f = $this->hasElement($field)) && !$force_nested) {
+        if (($f = $this->hasField($field)) && !$force_nested) {
             return parent::addCondition(...func_get_args());
         }
 
         // otherwise add condition in all sub-models
-        foreach ($this->union as $n=>list($model, $mapping)) {
+        foreach ($this->union as $n => [$model, $mapping]) {
             try {
                 $ff = $field;
                 if (isset($mapping[$field])) {
@@ -450,12 +432,12 @@ class UnionModel extends \atk4\data\Model
                 if ($ff[0] == '[') {
                     $ff = substr($ff, 1, -1);
                 }
-                if (!$model->hasElement($ff)) {
+                if (!$model->hasField($ff)) {
                     continue;
                 }
                 */
                 if (is_string($ff)) {
-                    $ff = $model->expr($ff);
+                    $ff = $model->expr('{}',[$ff]);
                 }
 
                 switch (func_num_args()) {
@@ -486,18 +468,20 @@ class UnionModel extends \atk4\data\Model
     public function __debugInfo()
     {
         $arr = [];
-        foreach ($this->union as $n=>list($model, $mapping)) {
+        foreach ($this->union as $n => [$model, $mapping]) {
             $arr[get_class($model)] = array_merge(
                 ['mapping' => $mapping],
                 $model->__debugInfo()
             );
         }
 
-        return array_merge(parent::__debugInfo(), [
-            'group' => $this->group,
-            'aggregate' => $this->aggregate,
-            'union_models' => $arr,
-        ]);
+        return array_merge(
+            parent::__debugInfo(), [
+                'group' => $this->group,
+                'aggregate' => $this->aggregate,
+                'union_models' => $arr,
+            ]
+        );
     }
 
     // }}}

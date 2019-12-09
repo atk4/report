@@ -22,7 +22,7 @@ jobs:
         image: mysql:5.7
         env:
           MYSQL_ROOT_PASSWORD: password
-          DB_DATABASE: dsql_test
+          DB_DATABASE: db
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
       postgres:
         image: postgres:10-alpine
@@ -56,11 +56,10 @@ jobs:
         run: vendor/bin/phpunit --configuration phpunit.xml --coverage-text --exclude-group dns || echo 'ignoring errors..'
 
       - name: MySQL Testing
-        #run: vendor/bin/phpunit --configuration phpunit-mysql.xml --exclude-group dns
-        run: vendor/bin/phpunit --configuration phpunit.xml --exclude-group dns
+        run: vendor/bin/phpunit --configuration phpunit-mysql-workflow.xml --exclude-group dns
 
       - name: PgSQL Testing (expected errors)
-        run: vendor/bin/phpunit --configuration phpunit-pgsql.xml --exclude-group dns || echo 'ignoring errors..'
+        run: vendor/bin/phpunit --configuration phpunit-pgsql-workflow.xml --exclude-group dns || echo 'ignoring errors..'
 
       - name: Merge coverage logs
         run: vendor/bin/phpcov merge build/logs/ --clover build/logs/cc.xml;

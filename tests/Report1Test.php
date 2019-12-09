@@ -2,11 +2,13 @@
 
 namespace atk4\report\tests;
 
+use atk4\report\GroupModel;
+use atk4\schema\PHPUnit_SchemaTestCase;
 
 /**
  * Tests basic create, update and delete operatiotns
  */
-class Report1Test extends \atk4\schema\PHPUnit_SchemaTestCase
+class Report1Test extends PHPUnit_SchemaTestCase
 {
 
     private $init_db = 
@@ -30,9 +32,11 @@ class Report1Test extends \atk4\schema\PHPUnit_SchemaTestCase
 
     function setUp() {
         parent::setUp();
+        $this->setDB($this->init_db);
+
         $m1 = new Invoice($this->db);
         $m1->getRef('client_id')->addTitle();
-        $this->g = new \atk4\report\GroupModel($m1);
+        $this->g = new GroupModel($m1);
         $this->g->addField('client');
     }
 
@@ -40,7 +44,7 @@ class Report1Test extends \atk4\schema\PHPUnit_SchemaTestCase
     {
         $g = $this->g;
 
-        $g->groupBy(['clienit_id'], ['c'=>'count(*)']);
+        $g->groupBy(['client_id'], ['c'=>'count(*)']);
 
         $this->assertEquals(
             [

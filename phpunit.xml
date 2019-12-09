@@ -1,8 +1,9 @@
 <phpunit colors="true" bootstrap="vendor/autoload.php" printerClass="atk4\core\PHPUnit_AgileResultPrinter">
     <php>
-        <env name="DB_DSN" value="mysql:dbname=test;host=localhost" />
-        <env name="DB_USER" value="root" />
-        <env name="DB_PASSWD" value="root" />
+        <var name="DB_DSN" value="mysql:dbname=dsql_test;host=localhost" />
+        <var name="DB_USER" value="travis" />
+        <var name="DB_PASSWD" value="" />
+        <var name="DB_DBNAME" value="dsql_test" />
     </php>
     <filter>
         <blacklist>
@@ -15,7 +16,6 @@
     <testsuites>
         <testsuite name="tests">
             <directory>tests</directory>
-            <exclude>tests/smbo/lib</exclude>
         </testsuite>
     </testsuites>
     <logging>

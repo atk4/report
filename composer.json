@@ -12,6 +12,8 @@
             "homepage": "https://nearly.guru/"
         }
     ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
         "php": ">=7.2.0",
         "atk4/data": "dev-develop",

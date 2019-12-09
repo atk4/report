@@ -50,8 +50,8 @@ jobs:
       - name: Run Tests
         run: |
           mkdir -p build/logs
-          mysql -uroot -ppassword -h mysql -e 'CREATE DATABASE dsql_test;'
-          PGPASSWORD=password psql -h postgres -c 'create database "atk4-dsql-test";' -U postgres
+          mysql -uroot -ppassword -h mysql -e 'CREATE DATABASE db;'
+          PGPASSWORD=password psql -h postgres -c 'create database "atk4-db";' -U postgres
       - name: SQLite Testing
         run: vendor/bin/phpunit --configuration phpunit.xml --coverage-text --exclude-group dns || echo 'ignoring errors..'
 

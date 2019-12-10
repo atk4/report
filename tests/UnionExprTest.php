@@ -2,11 +2,12 @@
 
 namespace atk4\report\tests;
 
+use atk4\schema\PHPUnit_SchemaTestCase;
 
 /**
  * Tests basic create, update and delete operatiotns
  */
-class UnionExprTest extends \atk4\schema\PHPUnit_SchemaTestCase
+class UnionExprTest extends PHPUnit_SchemaTestCase
 {
 
     private $init_db = 
@@ -28,6 +29,8 @@ class UnionExprTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     function setUp() {
         parent::setUp();
+        $this->setDB($this->init_db);
+
         $this->t = new Transaction2($this->db);
     }
 
@@ -229,7 +232,6 @@ class UnionExprTest extends \atk4\schema\PHPUnit_SchemaTestCase
             'UNION ALL (select sum(`amount`) `val` from `payment` where `client_id` = :b)) `derivedTable`',
             $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->render()
         );
-
     }
 
     /**

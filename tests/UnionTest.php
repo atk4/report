@@ -2,11 +2,12 @@
 
 namespace atk4\report\tests;
 
+use atk4\schema\PHPUnit_SchemaTestCase;
 
 /**
  * Tests basic create, update and delete operatiotns
  */
-class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
+class UnionTest extends PHPUnit_SchemaTestCase
 {
 
     private $init_db = 
@@ -28,6 +29,8 @@ class UnionTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     function setUp() {
         parent::setUp();
+        $this->setDB($this->init_db);
+
         $this->t = new Transaction($this->db);
     }
 

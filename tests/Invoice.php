@@ -1,15 +1,19 @@
 <?php
 
 namespace atk4\report\tests;
-class Invoice extends \atk4\data\Model 
+
+use atk4\data\Model;
+
+class Invoice extends Model 
 {
     public $table = 'invoice';
 
-    function init() {
+    public function init()
+    {
         parent::init();
         $this->addField('name');
 
-        $this->hasOne('client_id', 'Client');
-        $this->addField('amount', ['money'=>true]);
+        $this->hasOne('client_id', Client::class);
+        $this->addField('amount', ['type'=>'money']);
     }
 }

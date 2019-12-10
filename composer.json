@@ -4,7 +4,7 @@
     "description": "Agile Data - Report Extension",
     "keywords": ["agile", "data", "framework", "report", "group", "aggregation", "crud"],
     "homepage": "http://agiletoolkit.org/data/extension/report",
-    "license": "Commercial",
+    "license": "mit",
     "authors": [
         {
             "name": "Romans Malinovskis",

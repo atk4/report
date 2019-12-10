@@ -1,4 +1,6 @@
-# Agile Data - Reportig Add-on
+# Agile Data - Reporting Add-on
+
+![Build](https://github.com/atk4/report/workflows/Unit%20Testing/badge.svg)
 
 This extension for Agile Data implements advanced reporting capabilities:
 

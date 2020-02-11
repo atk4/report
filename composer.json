@@ -12,7 +12,7 @@
     "crud"
   ],
   "homepage": "http://agiletoolkit.org/data/extension/report",
-  "license": "Commercial",
+  "license": "mit",
   "authors": [
     {
       "name": "Romans Malinovskis",

@@ -33,7 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: php --version
-      - run: "git branch develop; git checkout develop"
+      # Need this to trick composer
+      # - run: "git branch develop; git checkout develop"
       - name: Get Composer Cache Directory
         id: composer-cache
         run: |

@@ -425,19 +425,18 @@ class UnionModel extends Model
         foreach ($this->union as $n => [$model, $mapping]) {
             try {
                 $ff = $field;
+
                 if (isset($mapping[$field])) {
-                    $ff = $mapping[$field];
-                }
-                /*
-                if ($ff[0] == '[') {
-                    $ff = substr($ff, 1, -1);
-                }
-                if (!$model->hasField($ff)) {
+                    // field is included in mapping - use mapping expression
+                    $ff = $mapping[$field] instanceof Expression
+                            ? $mapping[$field]
+                            : $this->expr($mapping[$field], $model->getFields());
+                } elseif (is_string($field) && $model->hasField($field)) {
+                    // model has such field - use that field directly
+                    $ff = $model->getField($field);
+                } else {
+                    // we don't know what to do, so let's do nothing
                     continue;
-                }
-                */
-                if (is_string($ff)) {
-                    $ff = $model->expr('{}',[$ff]);
                 }
 
                 switch (func_num_args()) {

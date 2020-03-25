@@ -381,7 +381,12 @@ class UnionModel extends Model
             $expr = $this->expr($expr, [$field_object]);
 
             if ($field_object) {
-                $this->removeField($field);
+                if (method_exists($this,'removeField')) {
+                    $this->removeField($field);
+                } else {
+                    // compatibility with atk4/data v1
+                    $field_object->destroy();
+                }
             }
 
             $field_object = $this->addExpression($field, $expr);

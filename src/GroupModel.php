@@ -346,7 +346,7 @@ class GroupModel extends Model
                     }
                 }
 
-                $q->where($cond[0]);
+                $q->having($cond[0]);
                 continue;
             }
 
@@ -359,14 +359,14 @@ class GroupModel extends Model
                     $cond[1] = $this->persistence->typecastSaveField($cond[0], $cond[1]);
                     $q->having($cond[0]->actual ?: $cond[0]->short_name, $cond[1]);
                 } else {
-                    $q->where($cond[0], $cond[1]);
+                    $q->having($cond[0], $cond[1]);
                 }
             } else {
                 if ($cond[0] instanceof Field) {
                     $cond[2] = $this->persistence->typecastSaveField($cond[0], $cond[2]);
                     $q->having($cond[0]->actual ?: $cond[0]->short_name, $cond[1], $cond[2]);
                 } else {
-                    $q->where($cond[0], $cond[1], $cond[2]);
+                    $q->having($cond[0], $cond[1], $cond[2]);
                 }
             }
         }

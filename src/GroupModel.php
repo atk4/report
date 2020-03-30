@@ -22,7 +22,6 @@ use atk4\dsql\Query;
  * but when querying it will use the original model to calculate the query, then add grouping and aggregates.
  *
  * If you wish you can add more fields, which will be passed through:
- *
  * $gr->addField('middle');
  *
  * If this field exist in the original model it will be added and you'll get exception otherwise. Finally you are
@@ -30,6 +29,9 @@ use atk4\dsql\Query;
  *
  * The base model must not be UnionModel or another GroupModel, however it's possible to use GroupModel as nestedModel inside UnionModel.
  * UnionModel implements identical grouping rule on its own.
+ *
+ * You can also pass seed (for example field type) when aggregating:
+ * $gr->groupBy(['first','last'], ['salary' => ['sum([])', 'type'=>'money']];
  */
 class GroupModel extends Model
 {
@@ -94,15 +96,16 @@ class GroupModel extends Model
         }
 
         foreach ($aggregate as $field=>$expr) {
+            $seed = is_array($expr) ? $expr : [$expr];
 
             // field originally defined in the parent model
             $field_object = $this->master_model->hasField($field); // use hasField here!
 
             // can be used as part of expression
-            $e = $this->master_model->expr($expr, [$field_object]);
+            $seed[0] = $this->master_model->expr($seed[0], [$field_object]);
 
             // now add the expressions here
-            $field_object = $this->addExpression($field, $e);
+            $field_object = $this->addExpression($field, $seed);
         }
 
         return $this;

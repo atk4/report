@@ -168,6 +168,9 @@ class GroupModel extends Model
      */
     public function addGrouping(Query $query)
     {
+        // use table alias of master model
+        $this->table_alias = $this->master_model->table_alias;
+
         foreach ($this->group as $field) {
             $el = $this->master_model->hasField($field);
             if ($el) {

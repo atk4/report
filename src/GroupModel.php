@@ -70,6 +70,9 @@ class GroupModel extends Model
 
         //$this->_default_class_addExpression = $model->_default_class_addExpression;
         parent::__construct($model->persistence, $defaults);
+
+        // always use table prefixes for this model
+        $this->persistence_data['use_table_prefixes'] = true;
     }
 
     /**

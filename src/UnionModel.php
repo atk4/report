@@ -1,6 +1,4 @@
 <?php
-// vim:ts=4:sw=4:et:fdm=marker:fdl=0
-
 namespace atk4\report;
 
 use atk4\data\Field;
@@ -466,10 +464,8 @@ class UnionModel extends Model
 
     /**
      * Returns array with useful debug info for var_dump.
-     *
-     * @return array
      */
-    public function __debugInfo()
+    public function __debugInfo(): array
     {
         $arr = [];
         foreach ($this->union as $n => [$model, $mapping]) {

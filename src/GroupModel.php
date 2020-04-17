@@ -382,10 +382,8 @@ class GroupModel extends Model
 
     /**
      * Returns array with useful debug info for var_dump.
-     *
-     * @return array
      */
-    public function __debugInfo()
+    public function __debugInfo(): array
     {
         return array_merge(parent::__debugInfo(), [
             'group' => $this->group,

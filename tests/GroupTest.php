@@ -10,8 +10,7 @@ use atk4\schema\PHPUnit_SchemaTestCase;
  */
 class GroupTest extends PHPUnit_SchemaTestCase
 {
-
-    private $init_db = 
+    private $init_db =
         [
             'client' => [
                 ['name' => 'Vinny'],
@@ -30,7 +29,8 @@ class GroupTest extends PHPUnit_SchemaTestCase
 
     protected $g;
 
-    function setUp() {
+    public function setUp()
+    {
         parent::setUp();
         $this->setDB($this->init_db);
 

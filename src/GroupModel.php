@@ -1,4 +1,5 @@
 <?php
+
 // vim:ts=4:sw=4:et:fdm=marker:fdl=0
 
 namespace atk4\report;
@@ -118,7 +119,7 @@ class GroupModel extends Model
      *
      * @return Field
      */
-    public function getRef($link) : Reference
+    public function getRef($link): Reference
     {
         return $this->master_model->getRef($link);
     }
@@ -136,14 +137,14 @@ class GroupModel extends Model
         if (!is_array($defaults)) {
             $defaults = [$defaults];
         }
-    
+
         if (
             isset($defaults[0]) && $defaults[0] instanceof Field_SQL_Expression
             || isset($defaults['never_persist']) && $defaults['never_persist']
         ) {
             return parent::addField($name, $defaults);
         }
-        
+
         $field = $this->master_model->hasField($name);
 
         return parent::addField($name, $field ? array_merge([$field], $defaults) : $defaults);
@@ -324,7 +325,7 @@ class GroupModel extends Model
      *
      * @return Query
      */
-    function initQueryConditions(Query $q)
+    public function initQueryConditions(Query $q)
     {
         $m = $this;
         if (!isset($m->conditions)) {

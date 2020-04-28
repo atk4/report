@@ -4,7 +4,7 @@ namespace atk4\report\tests;
 
 use atk4\data\Model;
 
-class Payment extends Model 
+class Payment extends Model
 {
     public $table = 'payment';
 

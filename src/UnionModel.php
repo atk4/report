@@ -1,4 +1,5 @@
 <?php
+
 namespace atk4\report;
 
 use atk4\data\Field;
@@ -101,7 +102,7 @@ class UnionModel extends Model
      *
      * @return Expression
      */
-    public function getSubQuery($fields) : Expression
+    public function getSubQuery($fields): Expression
     {
         $cnt = 0;
         $expr = [];
@@ -112,7 +113,6 @@ class UnionModel extends Model
             // map fields for related model
             $f = [];
             foreach ($fields as $field) {
-
                 try {
                     // Union can be joined with additional
                     // table/query and we don't touch those
@@ -167,7 +167,7 @@ class UnionModel extends Model
             }
 
             // now prepare query
-            $expr[] = '['.$cnt.']';
+            $expr[] = '[' . $cnt . ']';
             $q = $this->persistence->action($model, 'select', [false]);
 
             if ($model instanceof UnionModel) {
@@ -203,7 +203,7 @@ class UnionModel extends Model
             $args[$cnt++] = $q;
         }
         $args[$cnt] = $this->table;
-        return $this->persistence->dsql()->expr('('.join(' UNION ALL ',$expr).') {'.$cnt.'}', $args);
+        return $this->persistence->dsql()->expr('(' . join(' UNION ALL ', $expr) . ') {' . $cnt . '}', $args);
     }
 
     /**
@@ -214,7 +214,7 @@ class UnionModel extends Model
      *
      * @return Expression
      */
-    public function getSubAction($action, $act_arg=[]) : Expression
+    public function getSubAction($action, $act_arg=[]): Expression
     {
         $cnt = 0;
         $expr = [];
@@ -222,7 +222,7 @@ class UnionModel extends Model
 
         foreach ($this->union as list($model, $mapping)) {
             // now prepare query
-            $expr[] = '['.$cnt.']';
+            $expr[] = '[' . $cnt . ']';
             if ($act_arg && isset($act_arg[1])) {
                 $a = $act_arg;
                 $a[1] = $this->getFieldExpr(
@@ -238,7 +238,7 @@ class UnionModel extends Model
             $args[$cnt++] = $q;
         }
         $args[$cnt] = $this->table;
-        return $this->persistence->dsql()->expr('('.join(' UNION ALL ',$expr).') {'.$cnt.'}', $args);
+        return $this->persistence->dsql()->expr('(' . join(' UNION ALL ', $expr) . ') {' . $cnt . '}', $args);
     }
 
     /**
@@ -249,7 +249,7 @@ class UnionModel extends Model
      *
      * @return Expression
      */
-    public function action($mode, $args = []) : Expression
+    public function action($mode, $args = []): Expression
     {
         switch ($mode) {
             case 'insert':
@@ -350,7 +350,7 @@ class UnionModel extends Model
      *
      * @return Model
      */
-    public function addNestedModel($class, $mapping = []) : Model
+    public function addNestedModel($class, $mapping = []): Model
     {
         $m = $this->persistence->add($class);
         $this->union[] = [$m, $mapping];
@@ -368,18 +368,16 @@ class UnionModel extends Model
      */
     public function groupBy($group, $aggregate = [])
     {
-
         $this->aggregate = $aggregate;
         $this->group = $group;
 
         foreach ($aggregate as $field=>$expr) {
-
             $field_object = $this->hasField($field);
 
             $expr = $this->expr($expr, [$field_object]);
 
             if ($field_object) {
-                if (method_exists($this,'removeField')) {
+                if (method_exists($this, 'removeField')) {
                     $this->removeField($field);
                 } else {
                     // compatibility with atk4/data v1
@@ -476,7 +474,8 @@ class UnionModel extends Model
         }
 
         return array_merge(
-            parent::__debugInfo(), [
+            parent::__debugInfo(),
+            [
                 'group' => $this->group,
                 'aggregate' => $this->aggregate,
                 'union_models' => $arr,

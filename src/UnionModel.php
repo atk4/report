@@ -76,8 +76,10 @@ class UnionModel extends Model
     /**
      * For a sub-model with a specified mapping, return expression
      * that represents a field.
+     *
+     * @return Field|Expression
      */
-    public function getFieldExpr(Model $model, string $field, string $expr = null): Field
+    public function getFieldExpr(Model $model, string $field, string $expr = null)
     {
         if ($model->hasField($field)) {
             $field_object = $model->getField($field);
@@ -229,9 +231,14 @@ class UnionModel extends Model
     }
 
     /**
-     * No description.
+     * Execute action.
+     *
+     * @param string $mode
+     * @param array  $args
+     *
+     * @return Query
      */
-    public function action(string $mode, array $args = []): Expression
+    public function action($mode, $args = [])
     {
         switch ($mode) {
             case 'insert':

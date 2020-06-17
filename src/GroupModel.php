@@ -114,8 +114,10 @@ class GroupModel extends Model
 
     /**
      * Return reference field.
+     *
+     * @param string $link
      */
-    public function getRef(string $link): Reference
+    public function getRef($link): Reference
     {
         return $this->master_model->getRef($link);
     }

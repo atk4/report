@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\report\tests;
 
 use atk4\report\GroupModel;
@@ -29,7 +31,7 @@ class GroupTest extends PHPUnit_SchemaTestCase
 
     protected $g;
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->setDB($this->init_db);

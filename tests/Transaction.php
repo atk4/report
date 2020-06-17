@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\report\tests;
 
 use atk4\report\UnionModel;
 
 class Transaction extends UnionModel
 {
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -16,6 +18,6 @@ class Transaction extends UnionModel
 
         // next, define common fields
         $this->addField('name');
-        $this->addField('amount', ['type'=>'money']);
+        $this->addField('amount', ['type' => 'money']);
     }
 }

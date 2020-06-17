@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\report\tests;
 
 use atk4\data\Model;
@@ -8,7 +10,7 @@ class Client extends Model
 {
     public $table = 'client';
 
-    public function init()
+    public function init(): void
     {
         parent::init();
         $this->addField('name');

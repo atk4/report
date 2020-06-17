@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\report;
 
 use atk4\data\Field;
@@ -18,6 +20,9 @@ use atk4\dsql\Expression;
  */
 class UnionModel extends Model
 {
+    /** @const string */
+    public const HOOK_AFTER_UNION_SELECT = self::class . '@afterUnionSelect';
+
     /**
      * UnionModel should always be read-only.
      *
@@ -71,18 +76,12 @@ class UnionModel extends Model
     /**
      * For a sub-model with a specified mapping, return expression
      * that represents a field.
-     *
-     * @param Model  $model
-     * @param string $field
-     * @param string $expr
-     *
-     * @return Field
      */
-    public function getFieldExpr(Model $model, $field, $expr = null)
+    public function getFieldExpr(Model $model, string $field, string $expr = null): Field
     {
-        $field_object = $model->hasField($field);
-
-        if (!$field_object) {
+        if ($model->hasField($field)) {
+            $field_object = $model->getField($field);
+        } else {
             $field_object = $this->expr('NULL');
         }
 
@@ -97,18 +96,14 @@ class UnionModel extends Model
     /**
      * Configures nested models to have a specified set of fields
      * available.
-     *
-     * @param array $fields
-     *
-     * @return Expression
      */
-    public function getSubQuery($fields): Expression
+    public function getSubQuery(array $fields): Expression
     {
         $cnt = 0;
         $expr = [];
         $args = [];
 
-        foreach ($this->union as $n=>list($model, $mapping)) {
+        foreach ($this->union as $n => list($model, $mapping)) {
 
             // map fields for related model
             $f = [];
@@ -142,16 +137,15 @@ class UnionModel extends Model
                     }
 
                     /*
-                    if(!isset($model->aggregates_applied)) {
+                    if (!isset($model->aggregates_applied)) {
                         $model->aggregates_applied = [];
                     }
 
-                    if($field_object instanceof Field_SQL_Expression && !in_array($field, $model->aggregates_applied))
-                    {
+                    if ($field_object instanceof Field_SQL_Expression && !in_array($field, $model->aggregates_applied)) {
                         // generate query
 
                         // replace original field with query
-                        if($model->hasField($field)) {
+                        if ($model->hasField($field)) {
                             $model->removeField($field);
                         }
                         $field_object = $model->addExpression($field, $field_object);
@@ -180,8 +174,6 @@ class UnionModel extends Model
                 }
             }
 
-
-
             $q->field($f);
 
             // also for sub-queries
@@ -190,8 +182,8 @@ class UnionModel extends Model
                     foreach ($this->group as $gr) {
                         if (isset($mapping[$gr])) {
                             $q->group($model->expr($mapping[$gr]));
-                        } elseif ($f = $model->hasField($gr)) {
-                            $q->group($f);
+                        } elseif ($model->hasField($gr)) {
+                            $q->group($model->getField($gr));
                         }
                     }
                 } elseif (isset($mapping[$this->group])) {
@@ -208,13 +200,8 @@ class UnionModel extends Model
 
     /**
      * No description.
-     *
-     * @param string $action
-     * @param array  $act_arg
-     *
-     * @return Expression
      */
-    public function getSubAction($action, $act_arg=[]): Expression
+    public function getSubAction(string $action, array $act_arg=[]): Expression
     {
         $cnt = 0;
         $expr = [];
@@ -243,13 +230,8 @@ class UnionModel extends Model
 
     /**
      * No description.
-     *
-     * @param string $mode
-     * @param array  $args
-     *
-     * @return Expression
      */
-    public function action($mode, $args = []): Expression
+    public function action(string $mode, array $args = []): Expression
     {
         switch ($mode) {
             case 'insert':
@@ -260,7 +242,7 @@ class UnionModel extends Model
 
         // get list of available fields
         $fields = $this->only_fields ?: array_keys($this->getFields());
-        foreach ($fields as $k=>$field) {
+        foreach ($fields as $k => $field) {
             if ($this->getField($field)->never_persist) {
                 unset($fields[$k]);
             }
@@ -277,18 +259,18 @@ class UnionModel extends Model
                 if (isset($this->group)) {
                     $query->group($this->group);
                 }
-                $this->hook('afterUnionSelect', [$query]);
+                $this->hook(self::HOOK_AFTER_UNION_SELECT, [$query]);
                 return $query;
 
             case 'count':
-                $subquery = $this->getSubAction('count', ['alias'=>'cnt']);
+                $subquery = $this->getSubAction('count', ['alias' => 'cnt']);
                 $query = parent::action('fx', ['sum', $this->expr('{}', ['cnt'])]);
                 $query->reset('table')->table($subquery);
                 return $query;
 
             case 'field':
                 if (!is_string($args[0])) {
-                    throw new Exception(['action(field) only support string fields', 'field'=>$arg[0]]);
+                    throw new Exception(['action(field) only support string fields', 'field' => $arg[0]]);
                 }
 
                 $subquery = $this->getSubQuery([$args[0]]);
@@ -324,11 +306,11 @@ class UnionModel extends Model
     /**
      * Export model.
      *
-     * @param array $fields
-     *
-     * @return array
+     * @param array|null $fields        Names of fields to export
+     * @param string     $key_field     Optional name of field which value we will use as array key
+     * @param bool       $typecast_data Should we typecast exported data
      */
-    public function export($fields = null, $key_field = null, $typecast_data = true)
+    public function export($fields = null, $key_field = null, $typecast_data = true): array
     {
         if ($fields) {
             $this->onlyFields($fields);
@@ -347,10 +329,8 @@ class UnionModel extends Model
      *
      * @param string|Model $class Model.
      * @param array        $mapping Array of field mapping
-     *
-     * @return Model
      */
-    public function addNestedModel($class, $mapping = []): Model
+    public function addNestedModel($class, array $mapping = []): Model
     {
         $m = $this->persistence->add($class);
         $this->union[] = [$m, $mapping];
@@ -362,27 +342,23 @@ class UnionModel extends Model
      * Specify a single field or array of fields.
      *
      * @param string|array $group
-     * @param array        $aggregate
      *
      * @return $this
      */
-    public function groupBy($group, $aggregate = [])
+    public function groupBy($group, array $aggregate = [])
     {
         $this->aggregate = $aggregate;
         $this->group = $group;
 
-        foreach ($aggregate as $field=>$expr) {
-            $field_object = $this->hasField($field);
+        foreach ($aggregate as $field => $expr) {
+            if ($this->hasField($field)) {
+                $field_object = $this->getField($field);
+            }
 
             $expr = $this->expr($expr, [$field_object]);
 
             if ($field_object) {
-                if (method_exists($this, 'removeField')) {
-                    $this->removeField($field);
-                } else {
-                    // compatibility with atk4/data v1
-                    $field_object->destroy();
-                }
+                $this->removeField($field);
             }
 
             $field_object = $this->addExpression($field, $expr);
@@ -404,10 +380,10 @@ class UnionModel extends Model
      * If UnionModel has such field, then add condition to it.
      * Otherwise adds condition to all nested models.
      *
-     * @param string $field
-     * @param mixed  $operator
-     * @param mixed  $value
-     * @param bool   $force_nested Should we add condition to all nested models?
+     * @param mixed $field
+     * @param mixed $operator
+     * @param mixed $value
+     * @param bool  $force_nested Should we add condition to all nested models?
      *
      * @return $this
      */
@@ -418,7 +394,7 @@ class UnionModel extends Model
         }
 
         // if UnionModel has such field, then add condition to it
-        if (($f = $this->hasField($field)) && !$force_nested) {
+        if ($this->hasField($field) && !$force_nested) {
             return parent::addCondition(...func_get_args());
         }
 

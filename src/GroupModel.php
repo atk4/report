@@ -122,25 +122,30 @@ class GroupModel extends Model
 
     /**
      * Adds new field into model.
+     *
+     * @param string       $name
+     * @param array|object $seed
+     *
+     * @return Field
      */
-    public function addField(string $name, array $defaults = []): Field
+    public function addField($name, $seed = [])
     {
-        if (!is_array($defaults)) {
-            $defaults = [$defaults];
+        if (!is_array($seed)) {
+            $seed = [$seed];
         }
 
         if (
-            isset($defaults[0]) && $defaults[0] instanceof Field_SQL_Expression
-            || isset($defaults['never_persist']) && $defaults['never_persist']
+            isset($seed[0]) && $seed[0] instanceof Field_SQL_Expression
+            || isset($seed['never_persist']) && $seed['never_persist']
         ) {
-            return parent::addField($name, $defaults);
+            return parent::addField($name, $seed);
         }
 
         if ($this->master_model->hasField($name)) {
             $field = $this->master_model->getField($name);
         }
 
-        return parent::addField($name, $field ? array_merge([$field], $defaults) : $defaults);
+        return parent::addField($name, $field ? array_merge([$field], $seed) : $seed);
     }
 
     /**

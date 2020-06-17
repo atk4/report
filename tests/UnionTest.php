@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace atk4\report\tests;
 
-use atk4\schema\PHPUnit_SchemaTestCase;
-
 /**
  * Tests basic create, update and delete operatiotns
  */
-class UnionTest extends PHPUnit_SchemaTestCase
+class UnionTest extends \atk4\schema\PhpunitTestCase
 {
+    /** @var array */
     private $init_db =
         [
             'client' => [
@@ -18,13 +17,13 @@ class UnionTest extends PHPUnit_SchemaTestCase
                 ['name' => 'Zoe'],
             ],
             'invoice' => [
-                ['client_id'=>1, 'name'=>'chair purchase', 'amount'=>4],
-                ['client_id'=>1, 'name'=>'table purchase', 'amount'=>15],
-                ['client_id'=>2, 'name'=>'chair purchase', 'amount'=>4],
+                ['client_id' => 1, 'name' => 'chair purchase', 'amount' => 4],
+                ['client_id' => 1, 'name' => 'table purchase', 'amount' => 15],
+                ['client_id' => 2, 'name' => 'chair purchase', 'amount' => 4],
             ],
             'payment' => [
-                ['client_id'=>1, 'name'=>'prepay', 'amount'=>10],
-                ['client_id'=>2, 'name'=>'full pay', 'amount'=>4],
+                ['client_id' => 1, 'name' => 'prepay', 'amount' => 10],
+                ['client_id' => 2, 'name' => 'full pay', 'amount' => 4],
             ],
         ];
 
@@ -40,18 +39,19 @@ class UnionTest extends PHPUnit_SchemaTestCase
     {
         $t = $this->t;
 
+        $e = $this->getEscapeChar();
         $this->assertEquals(
-            '((select `name` `name` from `invoice`) UNION ALL (select `name` `name` from `payment`)) `derivedTable`',
+            str_replace('"', $e, '((select "name" "name" from "invoice") UNION ALL (select "name" "name" from "payment")) "derivedTable"'),
             $t->getSubQuery(['name'])->render()
         );
 
         $this->assertEquals(
-            '((select `name` `name`,`amount` `amount` from `invoice`) UNION ALL (select `name` `name`,`amount` `amount` from `payment`)) `derivedTable`',
+            str_replace('"', $e, '((select "name" "name","amount" "amount" from "invoice") UNION ALL (select "name" "name","amount" "amount" from "payment")) "derivedTable"'),
             $t->getSubQuery(['name', 'amount'])->render()
         );
 
         $this->assertEquals(
-            '((select `name` `name` from `invoice`) UNION ALL (select `name` `name` from `payment`)) `derivedTable`',
+            str_replace('"', $e, '((select "name" "name" from "invoice") UNION ALL (select "name" "name" from "payment")) "derivedTable"'),
             $t->getSubQuery(['name'])->render()
         );
     }
@@ -65,8 +65,9 @@ class UnionTest extends PHPUnit_SchemaTestCase
         $t->m_invoice->addExpression('type', '"invoice"');
         $t->addField('type');
 
+        $e = $this->getEscapeChar();
         $this->assertEquals(
-            '((select ("invoice") `type`,`amount` `amount` from `invoice`) UNION ALL (select NULL `type`,`amount` `amount` from `payment`)) `derivedTable`',
+            str_replace('"', $e, '((select ("invoice") "type","amount" "amount" from "invoice") UNION ALL (select NULL "type","amount" "amount" from "payment")) "derivedTable"'),
             $t->getSubQuery(['type', 'amount'])->render()
         );
     }
@@ -76,23 +77,24 @@ class UnionTest extends PHPUnit_SchemaTestCase
     {
         $t = $this->t;
 
+        $e = $this->getEscapeChar();
         $this->assertEquals(
-            'select `name`,`amount` from ((select `name` `name`,`amount` `amount` from `invoice`) UNION ALL (select `name` `name`,`amount` `amount` from `payment`)) `derivedTable`',
+            str_replace('"', $e, 'select "name","amount" from ((select "name" "name","amount" "amount" from "invoice") UNION ALL (select "name" "name","amount" "amount" from "payment")) "derivedTable"'),
             $t->action('select')->render()
         );
 
         $this->assertEquals(
-            'select `name` from ((select `name` `name` from `invoice`) UNION ALL (select `name` `name` from `payment`)) `derivedTable`',
+            str_replace('"', $e, 'select "name" from ((select "name" "name" from "invoice") UNION ALL (select "name" "name" from "payment")) "derivedTable"'),
             $t->action('field', ['name'])->render()
         );
 
         $this->assertEquals(
-            'select sum(`cnt`) from ((select count(*) `cnt` from `invoice`) UNION ALL (select count(*) `cnt` from `payment`)) `derivedTable`',
+            str_replace('"', $e, 'select sum("cnt") from ((select count(*) "cnt" from "invoice") UNION ALL (select count(*) "cnt" from "payment")) "derivedTable"'),
             $t->action('count')->render()
         );
 
         $this->assertEquals(
-            'select sum(`val`) from ((select sum(`amount`) `val` from `invoice`) UNION ALL (select sum(`amount`) `val` from `payment`)) `derivedTable`',
+            str_replace('"', $e, 'select sum("val") from ((select sum("amount") "val" from "invoice") UNION ALL (select sum("amount") "val" from "payment")) "derivedTable"'),
             $t->action('fx', ['sum', 'amount'])->render()
         );
     }
@@ -121,21 +123,20 @@ class UnionTest extends PHPUnit_SchemaTestCase
 
         $t = new Transaction($this->db);
         $this->assertEquals([
-            ['name' =>"chair purchase", 'amount' => 4],
-            ['name' =>"table purchase", 'amount' => 15],
-            ['name' =>"chair purchase", 'amount' => 4],
-            ['name' =>"prepay", 'amount' => 10],
-            ['name' =>"full pay", 'amount' => 4],
+            ['name' => 'chair purchase', 'amount' => 4],
+            ['name' => 'table purchase', 'amount' => 15],
+            ['name' => 'chair purchase', 'amount' => 4],
+            ['name' => 'prepay', 'amount' => 10],
+            ['name' => 'full pay', 'amount' => 4],
         ], $t->export());
-
 
         // Transaction is Union Model
         $client->hasMany('Transaction', new Transaction());
 
         $this->assertEquals([
-            ['name' =>"chair purchase", 'amount' => 4],
-            ['name' =>"table purchase", 'amount' => 15],
-            ['name' =>"prepay", 'amount' => 10],
+            ['name' => 'chair purchase', 'amount' => 4],
+            ['name' => 'table purchase', 'amount' => 15],
+            ['name' => 'prepay', 'amount' => 10],
         ], $client->ref('Transaction')->export());
     }
 
@@ -143,10 +144,11 @@ class UnionTest extends PHPUnit_SchemaTestCase
     {
         $t = $this->t;
 
-        $t->groupBy('name', ['amount'=>'sum([amount])']);
+        $t->groupBy('name', ['amount' => 'sum([amount])']);
 
+        $e = $this->getEscapeChar();
         $this->assertEquals(
-            '((select `name` `name`,sum(`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name` `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable`',
+            str_replace('"', $e, '((select "name" "name",sum("amount") "amount" from "invoice" group by "name") UNION ALL (select "name" "name",sum("amount") "amount" from "payment" group by "name")) "derivedTable"'),
             $t->getSubQuery(['name', 'amount'])->render()
         );
     }
@@ -155,11 +157,12 @@ class UnionTest extends PHPUnit_SchemaTestCase
     {
         $t = $this->t;
 
-        $t->groupBy('name', ['amount'=>'sum([amount])']);
+        $t->groupBy('name', ['amount' => 'sum([amount])']);
 
+        $e = $this->getEscapeChar();
         $this->assertEquals(
-            'select `name`,sum(`amount`) `amount` from ((select `name` `name`,sum(`amount`) `amount` from `invoice` group by `name`) UNION ALL (select `name` `name`,sum(`amount`) `amount` from `payment` group by `name`)) `derivedTable` group by `name`',
-            $t->action('select', [['name','amount']])->render()
+            str_replace('"', $e, 'select "name",sum("amount") "amount" from ((select "name" "name",sum("amount") "amount" from "invoice" group by "name") UNION ALL (select "name" "name",sum("amount") "amount" from "payment" group by "name")) "derivedTable" group by "name"'),
+            $t->action('select', [['name', 'amount']])->render()
         );
     }
 
@@ -170,15 +173,14 @@ class UnionTest extends PHPUnit_SchemaTestCase
     public function testGrouping3()
     {
         $t = $this->t;
-        $t->groupBy('name', ['amount'=>'sum([amount])']);
+        $t->groupBy('name', ['amount' => 'sum([amount])']);
         $t->setOrder('name');
 
-
         $this->assertEquals([
-            ['name' =>"chair purchase", 'amount' => 8],
-            ['name' =>"full pay", 'amount' => 4],
-            ['name' =>"prepay", 'amount' => 10],
-            ['name' =>"table purchase", 'amount' => 15],
+            ['name' => 'chair purchase', 'amount' => 8],
+            ['name' => 'full pay', 'amount' => 4],
+            ['name' => 'prepay', 'amount' => 10],
+            ['name' => 'table purchase', 'amount' => 15],
         ], $t->export());
     }
 
@@ -193,11 +195,11 @@ class UnionTest extends PHPUnit_SchemaTestCase
         $t->m_payment->addExpression('type', '"payment"');
         $t->addField('type');
 
-        $t->groupBy('type', ['amount'=>'sum([amount])']);
+        $t->groupBy('type', ['amount' => 'sum([amount])']);
 
         $this->assertEquals([
-            ['type'=>'invoice', 'amount' => 23],
-            ['type' =>'payment', 'amount' => 14],
+            ['type' => 'invoice', 'amount' => 23],
+            ['type' => 'payment', 'amount' => 14],
         ], $t->export(['type','amount']));
     }
 
@@ -211,16 +213,17 @@ class UnionTest extends PHPUnit_SchemaTestCase
 
         $this->assertEquals(29, $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->getOne());
 
+        $e = $this->getEscapeChar();
         $this->assertEquals(
-            'select sum(`val`) from ((select sum(`amount`) `val` from `invoice` where `client_id` = :a) ' .
-            'UNION ALL (select sum(`amount`) `val` from `payment` where `client_id` = :b)) `derivedTable`',
+            str_replace('"', $e, 'select sum("val") from ((select sum("amount") "val" from "invoice" where "client_id" = :a) ' .
+            'UNION ALL (select sum("amount") "val" from "payment" where "client_id" = :b)) "derivedTable"'),
             $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->render()
         );
     }
 
     /**
      * Aggregation is supposed to work in theory, but MySQL uses "semi-joins" for this type of query which does not support UNION,
-     * and therefore it complains about `client`.`id` field.
+     * and therefore it complains about "client"."id" field.
      *
      * See also: http://stackoverflow.com/questions/8326815/mysql-field-from-union-subselect#comment10267696_8326815
      */
@@ -228,13 +231,12 @@ class UnionTest extends PHPUnit_SchemaTestCase
     {
         $c = new Client($this->db);
         $c->hasMany('tr', new Transaction2())
-            ->addField('balance', ['field'=>'amount', 'aggregate'=>'sum']);
+            ->addField('balance', ['field' => 'amount', 'aggregate' => 'sum']);
 
-
+        $this->assertTrue(true); // fake assert
         /*
-        select `client`.`id`,`client`.`name`,(select sum(`val`) from ((select sum(`amount`) `val` from `invoice` where `client_id` = `client`.`id`) UNION ALL (select sum(`amount`) `val` from `payment` where `client_id` = `client`.`id`)) `derivedTable`) `balance` from `client` where `client`.`id` = 1 limit 0, 1
-
-         */
+        select "client"."id","client"."name",(select sum("val") from ((select sum("amount") "val" from "invoice" where "client_id" = "client"."id") UNION ALL (select sum("amount") "val" from "payment" where "client_id" = "client"."id")) "derivedTable") "balance" from "client" where "client"."id" = 1 limit 0, 1
+        */
         //$c->load(1);
     }
 }

@@ -196,7 +196,10 @@ class UnionModel extends Model
             }
             $args[$cnt++] = $q;
         }
+        
+        // last element is table name itself
         $args[$cnt] = $this->table;
+
         return $this->persistence->dsql()->expr('(' . join(' UNION ALL ', $expr) . ') {' . $cnt . '}', $args);
     }
 
@@ -226,7 +229,10 @@ class UnionModel extends Model
 
             $args[$cnt++] = $q;
         }
+        
+        // last element is table name itself
         $args[$cnt] = $this->table;
+
         return $this->persistence->dsql()->expr('(' . join(' UNION ALL ', $expr) . ') {' . $cnt . '}', $args);
     }
 

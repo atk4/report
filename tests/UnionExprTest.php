@@ -59,7 +59,7 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
         );
 
         $this->assertEquals(
-            str_replace('"', $e, '((select "name" "name" from "invoice") UNION ALL (select "name" "name" from "payment")) "derivedTable"'),
+            str_replace('"', $e, '((select "name" "name" from "invoice") UNION ALL (select "name" "name" from "payment")) "derivedTable"'),
             $t->getSubQuery(['name'])->render()
         );
     }
@@ -70,12 +70,12 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
     public function testMissingField()
     {
         $t = $this->t;
-        $t->m_invoice->addExpression('type', '"invoice"');
+        $t->m_invoice->addExpression('type', '\'invoice\'');
         $t->addField('type');
 
         $e = $this->getEscapeChar();
         $this->assertEquals(
-            str_replace('`',$e, '((select ("invoice") `type`,-`amount` `amount` from `invoice`) UNION ALL (select NULL `type`,`amount` `amount` from `payment`)) `derivedTable`'),
+            str_replace('`',$e, '((select (\'invoice\') `type`,-`amount` `amount` from `invoice`) UNION ALL (select NULL `type`,`amount` `amount` from `payment`)) `derivedTable`'),
             $t->getSubQuery(['type', 'amount'])->render()
         );
     }
@@ -111,7 +111,6 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
     {
         $t = $this->t;
         $this->assertEquals(5, $t->action('count')->getOne());
-
         $this->assertEquals(-9, $t->action('fx', ['sum', 'amount'])->getOne());
     }
 
@@ -124,7 +123,6 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
             $t->getSubAction('fx', ['sum','amount'])->render()
         );
     }
-
 
     public function testBasics()
     {
@@ -210,8 +208,8 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
     public function testSubGroupingByExpressions()
     {
         $t = $this->t;
-        $t->m_invoice->addExpression('type', '"invoice"');
-        $t->m_payment->addExpression('type', '"payment"');
+        $t->m_invoice->addExpression('type', '\'invoice\'');
+        $t->m_payment->addExpression('type', '\'payment\'');
         $t->addField('type');
 
         $t->groupBy('type', ['amount' => 'sum([])']);

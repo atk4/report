@@ -100,6 +100,8 @@ class GroupModel extends Model
             // field originally defined in the parent model
             if ($this->master_model->hasField($field)) {
                 $field_object = $this->master_model->getField($field);
+            } else {
+                $field_object = null;
             }
 
             // can be used as part of expression

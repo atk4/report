@@ -62,12 +62,12 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
     public function testMissingField()
     {
         $t = $this->t;
-        $t->m_invoice->addExpression('type', '"invoice"');
+        $t->m_invoice->addExpression('type', '\'invoice\'');
         $t->addField('type');
 
         $e = $this->getEscapeChar();
         $this->assertEquals(
-            str_replace('"', $e, '((select ("invoice") "type","amount" "amount" from "invoice") UNION ALL (select NULL "type","amount" "amount" from "payment")) "derivedTable"'),
+            str_replace('"', $e, '((select (\'invoice\') "type","amount" "amount" from "invoice") UNION ALL (select NULL "type","amount" "amount" from "payment")) "derivedTable"'),
             $t->getSubQuery(['type', 'amount'])->render()
         );
     }
@@ -191,8 +191,8 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
     public function testSubGroupingByExpressions()
     {
         $t = $this->t;
-        $t->m_invoice->addExpression('type', '"invoice"');
-        $t->m_payment->addExpression('type', '"payment"');
+        $t->m_invoice->addExpression('type', '\'invoice\'');
+        $t->m_payment->addExpression('type', '\'payment\'');
         $t->addField('type');
 
         $t->groupBy('type', ['amount' => 'sum([amount])']);

@@ -1,6 +1,6 @@
 <?php
 
-// vim:ts=4:sw=4:et:fdm=marker:fdl=0
+declare(strict_types=1);
 
 namespace atk4\report;
 
@@ -12,7 +12,7 @@ use atk4\dsql\Query;
 
 /**
  * GroupModel allows you to query using "group by" clause on your existing model.
- * It's quite simple to set up:
+ * It's quite simple to set up.
  *
  * $gr = new GroupModel($mymodel);
  * $gr->groupBy(['first','last'], ['salary'=>'sum([])'];
@@ -36,6 +36,9 @@ use atk4\dsql\Query;
  */
 class GroupModel extends Model
 {
+    /** @const string */
+    public const HOOK_AFTER_GROUP_SELECT = self::class . '@afterGroupSelect';
+
     /**
      * GroupModel should always be read-only.
      *
@@ -44,10 +47,10 @@ class GroupModel extends Model
     public $read_only = true;
 
     /** @var Model */
-    public $master_model = null;
+    public $master_model;
 
     /** @var string */
-    public $id_field = null;
+    public $id_field;
 
     /** @var array */
     public $group = [];
@@ -60,13 +63,8 @@ class GroupModel extends Model
 
     /**
      * Constructor.
-     *
-     * @param Model $model
-     * @param array $defaults
-     *
-     * @return GroupModel
      */
-    public function __construct(Model $model, $defaults = [])
+    public function __construct(Model $model, array $defaults = [])
     {
         $this->master_model = $model;
         $this->table = $model->table;
@@ -81,12 +79,12 @@ class GroupModel extends Model
     /**
      * Specify a single field or array of fields on which we will group model.
      *
-     * @param array $group Array of field names
+     * @param array $group     Array of field names
      * @param array $aggregate Array of aggregate mapping
      *
      * @return $this
      */
-    public function groupBy($group, $aggregate = [])
+    public function groupBy(array $group, array $aggregate = [])
     {
         $this->group = $group;
         $this->aggregate = $aggregate;
@@ -96,11 +94,15 @@ class GroupModel extends Model
             $this->addField($field);
         }
 
-        foreach ($aggregate as $field=>$expr) {
+        foreach ($aggregate as $field => $expr) {
             $seed = is_array($expr) ? $expr : [$expr];
 
             // field originally defined in the parent model
-            $field_object = $this->master_model->hasField($field); // use hasField here!
+            if ($this->master_model->hasField($field)) {
+                $field_object = $this->master_model->getField($field);
+            } else {
+                $field_object = null;
+            }
 
             // can be used as part of expression
             $seed[0] = $this->master_model->expr($seed[0], [$field_object]);
@@ -116,8 +118,6 @@ class GroupModel extends Model
      * Return reference field.
      *
      * @param string $link
-     *
-     * @return Field
      */
     public function getRef($link): Reference
     {
@@ -128,37 +128,34 @@ class GroupModel extends Model
      * Adds new field into model.
      *
      * @param string       $name
-     * @param array|object $defaults
+     * @param array|object $seed
      *
      * @return Field
      */
-    public function addField($name, $defaults = [])
+    public function addField($name, $seed = [])
     {
-        if (!is_array($defaults)) {
-            $defaults = [$defaults];
+        if (!is_array($seed)) {
+            $seed = [$seed];
         }
 
         if (
-            isset($defaults[0]) && $defaults[0] instanceof Field_SQL_Expression
-            || isset($defaults['never_persist']) && $defaults['never_persist']
+            isset($seed[0]) && $seed[0] instanceof Field_SQL_Expression
+            || isset($seed['never_persist']) && $seed['never_persist']
         ) {
-            return parent::addField($name, $defaults);
+            return parent::addField($name, $seed);
         }
 
-        $field = $this->master_model->hasField($name);
+        if ($this->master_model->hasField($name)) {
+            $field = $this->master_model->getField($name);
+        }
 
-        return parent::addField($name, $field ? array_merge([$field], $defaults) : $defaults);
+        return parent::addField($name, $field ? array_merge([$field], $seed) : $seed);
     }
 
     /**
      * Given a query, will add safe fields in.
-     *
-     * @param Query $query
-     * @param array $fields
-     *
-     * @return Query
      */
-    public function queryFields(Query $query, $fields = [])
+    public function queryFields(Query $query, array $fields = []): Query
     {
         $this->persistence->initQueryFields($this, $query, $fields);
 
@@ -167,8 +164,6 @@ class GroupModel extends Model
 
     /**
      * Adds grouping in query.
-     *
-     * @param Query $query
      */
     public function addGrouping(Query $query)
     {
@@ -176,7 +171,9 @@ class GroupModel extends Model
         $this->table_alias = $this->master_model->table_alias;
 
         foreach ($this->group as $field) {
-            $el = $this->master_model->hasField($field);
+            if ($this->master_model->hasField($field)) {
+                $el = $this->master_model->getField($field);
+            }
             if ($el) {
                 $query->group($el);
             } else {
@@ -188,7 +185,8 @@ class GroupModel extends Model
     /**
      * Sets limit.
      *
-     * @param mixed ...$args
+     * @param int      $count
+     * @param int|null $offset
      *
      * @return $this
      *
@@ -204,7 +202,8 @@ class GroupModel extends Model
     /**
      * Sets order.
      *
-     * @param mixed ...$args
+     * @param mixed     $field
+     * @param bool|null $desc
      *
      * @return $this
      *
@@ -218,7 +217,7 @@ class GroupModel extends Model
     }
 
     /**
-     * Set action.
+     * Execute action.
      *
      * @param string $mode
      * @param array  $args
@@ -231,7 +230,7 @@ class GroupModel extends Model
             case 'insert':
             case 'update':
             case 'delete':
-                throw new Exception(['GroupModel does not support this action', 'action'=>$mode]);
+                throw new Exception(['GroupModel does not support this action', 'action' => $mode]);
         }
 
         // get list of available fields
@@ -261,27 +260,25 @@ class GroupModel extends Model
                 $this->addGrouping($query);
                 $this->initQueryConditions($query);
 
-                $this->hook('afterGroupSelect', [$query]);
+                $this->hook(self::HOOK_AFTER_GROUP_SELECT, [$query]);
 
                 return $query;
-
             case 'count':
                 $query = $this->master_model->action($mode, $args);
 
                 $query->reset('field')->field($this->expr('1'));
                 $this->addGrouping($query);
 
-                $this->hook('afterGroupSelect', [$query]);
+                $this->hook(self::HOOK_AFTER_GROUP_SELECT, [$query]);
 
                 $q = $query->dsql();
-                $q->table($this->expr("([]) der", [$query]));
+                $q->table($this->expr('([]) der', [$query]));
                 $q->field('count(*)');
 
                 return $q;
-
             case 'field':
                 if (!is_string($args[0])) {
-                    throw new Exception(['action(field) only support string fields', 'field'=>$args[0]]);
+                    throw new Exception(['action(field) only support string fields', 'field' => $args[0]]);
                 }
 
                 $subquery = $this->getSubQuery([$args[0]]);
@@ -292,17 +289,16 @@ class GroupModel extends Model
                         'action' => $mode,
                     ]);
                 }
-                break;
 
+                break;
             case 'fx':
 
-                $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias'=>'val']);
+                $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias' => 'val']);
 
                 $query = parent::action('fx', [$args[0], $this->expr('val')]);
                 $query->reset('table')->table($subquery);
 
                 return $query;
-
             default:
                 throw new Exception([
                     'Unsupported action mode',
@@ -314,18 +310,15 @@ class GroupModel extends Model
 
         // Next - substitute FROM table with our subquery expression
         $query->reset('table')->table($subquery);
+
         return $query;
     }
 
     /**
      * Our own way applying conditions, where we use "having" for
-     * fields
-     *
-     * @param Query $q
-     *
-     * @return Query
+     * fields.
      */
-    public function initQueryConditions(Query $q)
+    public function initQueryConditions(Query $q): Query
     {
         $m = $this;
         if (!isset($m->conditions)) {
@@ -334,13 +327,11 @@ class GroupModel extends Model
         }
 
         foreach ($m->conditions as $cond) {
-
             // Options here are:
             // count($cond) == 1, we will pass the only
             // parameter inside where()
 
             if (count($cond) == 1) {
-
                 // OR conditions
                 if (is_array($cond[0])) {
                     foreach ($cond[0] as &$row) {
@@ -351,6 +342,7 @@ class GroupModel extends Model
                 }
 
                 $q->having($cond[0]);
+
                 continue;
             }
 
@@ -377,7 +369,6 @@ class GroupModel extends Model
 
         return $q;
     }
-
 
     // {{{ Debug Methods
 

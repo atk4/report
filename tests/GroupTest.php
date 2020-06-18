@@ -1,15 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\report\tests;
 
 use atk4\report\GroupModel;
-use atk4\schema\PHPUnit_SchemaTestCase;
 
-/**
- * Tests basic create, update and delete operatiotns
- */
-class GroupTest extends PHPUnit_SchemaTestCase
+class GroupTest extends \atk4\schema\PhpunitTestCase
 {
+    /** @var array */
     private $init_db =
         [
             'client' => [
@@ -17,19 +16,20 @@ class GroupTest extends PHPUnit_SchemaTestCase
                 ['name' => 'Zoe'],
             ],
             'invoice' => [
-                ['client_id'=>1, 'name'=>'chair purchase', 'amount'=>4],
-                ['client_id'=>1, 'name'=>'table purchase', 'amount'=>15],
-                ['client_id'=>2, 'name'=>'chair purchase', 'amount'=>4],
+                ['client_id' => 1, 'name' => 'chair purchase', 'amount' => 4],
+                ['client_id' => 1, 'name' => 'table purchase', 'amount' => 15],
+                ['client_id' => 2, 'name' => 'chair purchase', 'amount' => 4],
             ],
             'payment' => [
-                ['client_id'=>1, 'name'=>'prepay', 'amount'=>10],
-                ['client_id'=>2, 'name'=>'full pay', 'amount'=>4],
+                ['client_id' => 1, 'name' => 'prepay', 'amount' => 10],
+                ['client_id' => 2, 'name' => 'full pay', 'amount' => 4],
             ],
         ];
 
+    /** @var GroupModel */
     protected $g;
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->setDB($this->init_db);
@@ -44,12 +44,12 @@ class GroupTest extends PHPUnit_SchemaTestCase
     {
         $g = $this->g;
 
-        $g->groupBy(['client_id'], ['c'=>'count(*)']);
+        $g->groupBy(['client_id'], ['c' => 'count(*)']);
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'c'=>2],
-                ['client'=>'Zoe','client_id'=>2, 'c'=>1],
+                ['client' => 'Vinny', 'client_id' => 1, 'c' => 2],
+                ['client' => 'Zoe', 'client_id' => 2, 'c' => 1],
             ],
             $g->export()
         );
@@ -60,13 +60,13 @@ class GroupTest extends PHPUnit_SchemaTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            'amount'=>'sum([])',
+            'amount' => 'sum([])',
         ]);
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'amount'=>19],
-                ['client'=>'Zoe','client_id'=>2, 'amount'=>4],
+                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19],
+                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4],
             ],
             $g->export()
         );
@@ -77,15 +77,15 @@ class GroupTest extends PHPUnit_SchemaTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's'=>'sum([amount])',
-            'm'=>'max([amount])',
-            'amount'=>'sum([])',
+            's' => 'sum([amount])',
+            'm' => 'max([amount])',
+            'amount' => 'sum([])',
         ]);
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'amount'=>19, 's'=>19, 'm'=>15],
-                ['client'=>'Zoe','client_id'=>2, 'amount'=>4, 's'=>4, 'm'=>4],
+                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19, 's' => 19, 'm' => 15],
+                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4, 's' => 4, 'm' => 4],
             ],
             $g->export()
         );
@@ -96,16 +96,16 @@ class GroupTest extends PHPUnit_SchemaTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's'=>'sum([amount])',
-            'amount'=>'sum([])',
+            's' => 'sum([amount])',
+            'amount' => 'sum([])',
         ]);
 
         $g->addExpression('double', '[s]+[amount]');
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'amount'=>19, 's'=>19, 'double'=>38],
-                ['client'=>'Zoe','client_id'=>2, 'amount'=>4, 's'=>4, 'double'=>8],
+                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19, 's' => 19, 'double' => 38],
+                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4, 's' => 4, 'double' => 8],
             ],
             $g->export()
         );
@@ -117,16 +117,16 @@ class GroupTest extends PHPUnit_SchemaTestCase
         $g->master_model->addCondition('name', 'chair purchase');
 
         $g->groupBy(['client_id'], [
-            's'=>'sum([amount])',
-            'amount'=>'sum([])',
+            's' => 'sum([amount])',
+            'amount' => 'sum([])',
         ]);
 
         $g->addExpression('double', '[s]+[amount]');
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'amount'=>4, 's'=>4, 'double'=>8],
-                ['client'=>'Zoe','client_id'=>2, 'amount'=>4, 's'=>4, 'double'=>8],
+                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 4, 's' => 4, 'double' => 8],
+                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4, 's' => 4, 'double' => 8],
             ],
             $g->export()
         );
@@ -137,8 +137,8 @@ class GroupTest extends PHPUnit_SchemaTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's'=>'sum([amount])',
-            'amount'=>'sum([])',
+            's' => 'sum([amount])',
+            'amount' => 'sum([])',
         ]);
 
         $g->addExpression('double', '[s]+[amount]');
@@ -146,7 +146,7 @@ class GroupTest extends PHPUnit_SchemaTestCase
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'amount'=>19, 's'=>19, 'double'=>38],
+                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19, 's' => 19, 'double' => 38],
             ],
             $g->export()
         );
@@ -157,8 +157,8 @@ class GroupTest extends PHPUnit_SchemaTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's'=>'sum([amount])',
-            'amount'=>'sum([])',
+            's' => 'sum([amount])',
+            'amount' => 'sum([])',
         ]);
 
         $g->addExpression('double', '[s]+[amount]');
@@ -166,7 +166,7 @@ class GroupTest extends PHPUnit_SchemaTestCase
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'amount'=>19, 's'=>19, 'double'=>38],
+                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19, 's' => 19, 'double' => 38],
             ],
             $g->export()
         );
@@ -177,8 +177,8 @@ class GroupTest extends PHPUnit_SchemaTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's'=>'sum([amount])',
-            'amount'=>'sum([])',
+            's' => 'sum([amount])',
+            'amount' => 'sum([])',
         ]);
 
         $g->addExpression('double', '[s]+[amount]');
@@ -186,7 +186,7 @@ class GroupTest extends PHPUnit_SchemaTestCase
 
         $this->assertEquals(
             [
-                ['client'=>'Zoe','client_id'=>2, 'amount'=>4, 's'=>4, 'double'=>8],
+                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4, 's' => 4, 'double' => 8],
             ],
             $g->export()
         );
@@ -197,13 +197,13 @@ class GroupTest extends PHPUnit_SchemaTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            'amount'=>'sum([])',
+            'amount' => 'sum([])',
         ]);
         $g->setLimit(1);
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'amount'=>19],
+                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19],
             ],
             $g->export()
         );
@@ -214,13 +214,13 @@ class GroupTest extends PHPUnit_SchemaTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            'amount'=>'sum([])',
+            'amount' => 'sum([])',
         ]);
         $g->setLimit(1, 1);
 
         $this->assertEquals(
             [
-                ['client'=>'Zoe','client_id'=>2, 'amount'=>4],
+                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4],
             ],
             $g->export()
         );

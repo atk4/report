@@ -1,15 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\report\tests;
 
 use atk4\report\GroupModel;
-use atk4\schema\PHPUnit_SchemaTestCase;
 
-/**
- * Tests basic create, update and delete operatiotns
- */
-class Report1Test extends PHPUnit_SchemaTestCase
+class Report1Test extends \atk4\schema\PhpunitTestCase
 {
+    /** @var array */
     private $init_db =
         [
             'client' => [
@@ -17,19 +16,20 @@ class Report1Test extends PHPUnit_SchemaTestCase
                 ['name' => 'Zoe'],
             ],
             'invoice' => [
-                ['client_id'=>1, 'name'=>'chair purchase', 'amount'=>4],
-                ['client_id'=>1, 'name'=>'table purchase', 'amount'=>15],
-                ['client_id'=>2, 'name'=>'chair purchase', 'amount'=>4],
+                ['client_id' => 1, 'name' => 'chair purchase', 'amount' => 4],
+                ['client_id' => 1, 'name' => 'table purchase', 'amount' => 15],
+                ['client_id' => 2, 'name' => 'chair purchase', 'amount' => 4],
             ],
             'payment' => [
-                ['client_id'=>1, 'name'=>'prepay', 'amount'=>10],
-                ['client_id'=>2, 'name'=>'full pay', 'amount'=>4],
+                ['client_id' => 1, 'name' => 'prepay', 'amount' => 10],
+                ['client_id' => 2, 'name' => 'full pay', 'amount' => 4],
             ],
         ];
 
+    /** @var GroupModel */
     protected $g;
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->setDB($this->init_db);
@@ -44,12 +44,12 @@ class Report1Test extends PHPUnit_SchemaTestCase
     {
         $g = $this->g;
 
-        $g->groupBy(['client_id'], ['c'=>'count(*)']);
+        $g->groupBy(['client_id'], ['c' => 'count(*)']);
 
         $this->assertEquals(
             [
-                ['client'=>'Vinny','client_id'=>1, 'c'=>2],
-                ['client'=>'Zoe','client_id'=>2, 'c'=>1],
+                ['client' => 'Vinny', 'client_id' => 1, 'c' => 2],
+                ['client' => 'Zoe', 'client_id' => 2, 'c' => 1],
             ],
             $g->export()
         );

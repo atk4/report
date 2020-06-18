@@ -97,6 +97,8 @@ class GroupModel extends Model
         foreach ($aggregate as $field => $expr) {
             $seed = is_array($expr) ? $expr : [$expr];
 
+
+			 //$this->addField($field);
             // field originally defined in the parent model
             if ($this->master_model->hasField($field)) {
                 $field_object = $this->master_model->getField($field);
@@ -180,6 +182,9 @@ class GroupModel extends Model
                 $query->group($this->expr($field));
             }
         }
+
+
+
     }
 
     /**
@@ -209,12 +214,7 @@ class GroupModel extends Model
      *
      * @todo Incorrect implementation
      */
-    public function setOrder($field, $desc = null)
-    {
-        $this->master_model->setOrder($field, $desc);
 
-        return $this;
-    }
 
     /**
      * Execute action.
@@ -261,6 +261,8 @@ class GroupModel extends Model
                 $this->initQueryConditions($query);
 
                 $this->hook(self::HOOK_AFTER_GROUP_SELECT, [$query]);
+
+                $query = $this->orderByQuery($query);
 
                 return $query;
             case 'count':
@@ -313,6 +315,32 @@ class GroupModel extends Model
 
         return $query;
     }
+
+    /**
+     * Applies Order By to the query
+     *
+     */
+     function orderByQuery($query)
+     {
+
+       if ($this->order) {
+
+         foreach ($this->order as $o) {
+
+           if(is_string($o[1])){
+             $query->order($o[0]." ".$o[1]);
+           } else {
+             $query->order($o[0],$o[1]);
+           }
+         }
+       }
+
+       return $query;
+
+     }
+
+
+
 
     /**
      * Our own way applying conditions, where we use "having" for

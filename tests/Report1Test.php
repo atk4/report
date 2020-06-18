@@ -16,13 +16,13 @@ class Report1Test extends \atk4\schema\PhpunitTestCase
                 ['name' => 'Zoe'],
             ],
             'invoice' => [
-                ['client_id' => 1, 'name' => 'chair purchase', 'amount' => 4],
-                ['client_id' => 1, 'name' => 'table purchase', 'amount' => 15],
-                ['client_id' => 2, 'name' => 'chair purchase', 'amount' => 4],
+                ['client_id' => 1, 'name' => 'chair purchase', 'amount' => 4.0],
+                ['client_id' => 1, 'name' => 'table purchase', 'amount' => 15.0],
+                ['client_id' => 2, 'name' => 'chair purchase', 'amount' => 4.0],
             ],
             'payment' => [
-                ['client_id' => 1, 'name' => 'prepay', 'amount' => 10],
-                ['client_id' => 2, 'name' => 'full pay', 'amount' => 4],
+                ['client_id' => 1, 'name' => 'prepay', 'amount' => 10.0],
+                ['client_id' => 2, 'name' => 'full pay', 'amount' => 4.0],
             ],
         ];
 
@@ -44,12 +44,12 @@ class Report1Test extends \atk4\schema\PhpunitTestCase
     {
         $g = $this->g;
 
-        $g->groupBy(['client_id'], ['c' => 'count(*)']);
+        $g->groupBy(['client_id'], ['c' => ['count(*)', 'type' => 'integer']]);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Vinny', 'client_id' => 1, 'c' => 2],
-                ['client' => 'Zoe', 'client_id' => 2, 'c' => 1],
+                ['client' => 'Vinny', 'client_id' => '1', 'c' => 2],
+                ['client' => 'Zoe', 'client_id' => '2', 'c' => 1],
             ],
             $g->export()
         );

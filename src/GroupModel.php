@@ -105,7 +105,11 @@ class GroupModel extends Model
             }
 
             // can be used as part of expression
-            $seed[0] = $this->master_model->expr($seed[0], [$field_object]);
+            if ($field_object) {
+                $seed[0] = $this->master_model->expr($seed[0], [$field_object]);
+            } else {
+                $seed[0] = $this->master_model->expr($seed[0]);
+            }
 
             // now add the expressions here
             $field_object = $this->addExpression($field, $seed);
@@ -328,10 +332,10 @@ class GroupModel extends Model
 
         foreach ($m->conditions as $cond) {
             // Options here are:
-            // count($cond) == 1, we will pass the only
+            // count($cond) === 1, we will pass the only
             // parameter inside where()
 
-            if (count($cond) == 1) {
+            if (count($cond) === 1) {
                 // OR conditions
                 if (is_array($cond[0])) {
                     foreach ($cond[0] as &$row) {
@@ -350,7 +354,7 @@ class GroupModel extends Model
                 $cond[0] = $m->getField($cond[0]);
             }
 
-            if (count($cond) == 2) {
+            if (count($cond) === 2) {
                 if ($cond[0] instanceof Field) {
                     $cond[1] = $this->persistence->typecastSaveField($cond[0], $cond[1]);
                     $q->having($cond[0]->actual ?: $cond[0]->short_name, $cond[1]);

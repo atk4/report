@@ -115,8 +115,7 @@ class UnionModel extends Model
                     // fields
 
                     if (!$this->hasField($field)) {
-                        $field_object = $model->expr('NULL');
-                        $f[$field] = $field_object;
+                        $f[$field] = $model->expr('NULL');
 
                         continue;
                     }
@@ -135,26 +134,11 @@ class UnionModel extends Model
                     $field_object = $this->getFieldExpr($model, $field, $mapping[$field] ?? null);
 
                     if (isset($this->aggregate[$field])) {
-                        $field_object = $model->expr($this->aggregate[$field], [$field_object]);
+                        $seed = (array) $this->aggregate[$field];
+
+                        // first element of seed should be expression itself
+                        $field_object = $model->expr($seed[0], [$field_object]);
                     }
-
-                    /*
-                    if (!isset($model->aggregates_applied)) {
-                        $model->aggregates_applied = [];
-                    }
-
-                    if ($field_object instanceof Field_SQL_Expression && !in_array($field, $model->aggregates_applied)) {
-                        // generate query
-
-                        // replace original field with query
-                        if ($model->hasField($field)) {
-                            $model->removeField($field);
-                        }
-                        $field_object = $model->addExpression($field, $field_object);
-
-                        $model->aggregates_applied[] = $field;
-                    }
-                    */
 
                     $f[$field] = $field_object;
                 } catch (\atk4\core\Exception $e) {
@@ -371,18 +355,29 @@ class UnionModel extends Model
         $this->aggregate = $aggregate;
         $this->group = $group;
 
-        foreach ($aggregate as $field => $expr) {
+        foreach ($aggregate as $field => $seed) {
+            $seed = (array) $seed;
+
             if ($this->hasField($field)) {
                 $field_object = $this->getField($field);
+            } else {
+                $field_object = null;
             }
 
-            $expr = $this->expr($expr, [$field_object]);
+            // first element of seed should be expression itself
+            if (isset($seed[0]) && is_string($seed[0])) {
+                if ($field_object) {
+                    $seed[0] = $this->expr($seed[0], [$field_object]);
+                } else {
+                    $seed[0] = $this->expr($seed[0]);
+                }
+            }
 
             if ($field_object) {
                 $this->removeField($field);
             }
 
-            $field_object = $this->addExpression($field, $expr);
+            $this->addExpression($field, $seed);
         }
 
         foreach ($this->union as list($model, $mapping)) {

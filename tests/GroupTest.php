@@ -16,13 +16,13 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
                 ['name' => 'Zoe'],
             ],
             'invoice' => [
-                ['client_id' => 1, 'name' => 'chair purchase', 'amount' => 4],
-                ['client_id' => 1, 'name' => 'table purchase', 'amount' => 15],
-                ['client_id' => 2, 'name' => 'chair purchase', 'amount' => 4],
+                ['client_id' => 1, 'name' => 'chair purchase', 'amount' => 4.0],
+                ['client_id' => 1, 'name' => 'table purchase', 'amount' => 15.0],
+                ['client_id' => 2, 'name' => 'chair purchase', 'amount' => 4.0],
             ],
             'payment' => [
-                ['client_id' => 1, 'name' => 'prepay', 'amount' => 10],
-                ['client_id' => 2, 'name' => 'full pay', 'amount' => 4],
+                ['client_id' => 1, 'name' => 'prepay', 'amount' => 10.0],
+                ['client_id' => 2, 'name' => 'full pay', 'amount' => 4.0],
             ],
         ];
 
@@ -44,12 +44,12 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
     {
         $g = $this->g;
 
-        $g->groupBy(['client_id'], ['c' => 'count(*)']);
+        $g->groupBy(['client_id'], ['c' => ['count(*)', 'type' => 'integer']]);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Vinny', 'client_id' => 1, 'c' => 2],
-                ['client' => 'Zoe', 'client_id' => 2, 'c' => 1],
+                ['client' => 'Vinny', 'client_id' => '1', 'c' => 2],
+                ['client' => 'Zoe', 'client_id' => '2', 'c' => 1],
             ],
             $g->export()
         );
@@ -60,13 +60,13 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            'amount' => 'sum([])',
+            'amount' => ['sum([])', 'type' => 'money'],
         ]);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19],
-                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4],
+                ['client' => 'Vinny', 'client_id' => '1', 'amount' => 19.0],
+                ['client' => 'Zoe', 'client_id' => '2', 'amount' => 4.0],
             ],
             $g->export()
         );
@@ -77,15 +77,16 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => 'sum([amount])',
-            'm' => 'max([amount])',
-            'amount' => 'sum([])',
+            's' => ['sum([amount])', 'type' => 'money'],
+            'min' => ['min([amount])', 'type' => 'money'],
+            'max' => ['max([amount])', 'type' => 'money'],
+            'amount' => ['sum([])', 'type' => 'money'], // same as `s`, but reuse name `amount`
         ]);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19, 's' => 19, 'm' => 15],
-                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4, 's' => 4, 'm' => 4],
+                ['client' => 'Vinny', 'client_id' => '1', 's' => 19.0, 'min' => 4.0, 'max' => 15.0, 'amount' => 19.0],
+                ['client' => 'Zoe', 'client_id' => '2', 's' => 4.0, 'min' => 4.0, 'max' => 4.0, 'amount' => 4.0],
             ],
             $g->export()
         );
@@ -96,16 +97,16 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => 'sum([amount])',
-            'amount' => 'sum([])',
+            's' => ['sum([amount])', 'type' => 'money'],
+            'amount' => ['sum([])', 'type' => 'money'],
         ]);
 
-        $g->addExpression('double', '[s]+[amount]');
+        $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19, 's' => 19, 'double' => 38],
-                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4, 's' => 4, 'double' => 8],
+                ['client' => 'Vinny', 'client_id' => '1', 's' => 19.0, 'amount' => 19.0, 'double' => 38.0],
+                ['client' => 'Zoe', 'client_id' => '2', 's' => 4.0, 'amount' => 4.0, 'double' => 8.0],
             ],
             $g->export()
         );
@@ -117,16 +118,16 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g->master_model->addCondition('name', 'chair purchase');
 
         $g->groupBy(['client_id'], [
-            's' => 'sum([amount])',
-            'amount' => 'sum([])',
+            's' => ['sum([amount])', 'type' => 'money'],
+            'amount' => ['sum([])', 'type' => 'money'],
         ]);
 
-        $g->addExpression('double', '[s]+[amount]');
+        $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 4, 's' => 4, 'double' => 8],
-                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4, 's' => 4, 'double' => 8],
+                ['client' => 'Vinny', 'client_id' => '1', 's' => 4.0, 'amount' => 4.0, 'double' => 8.0],
+                ['client' => 'Zoe', 'client_id' => '2', 's' => 4.0, 'amount' => 4.0, 'double' => 8.0],
             ],
             $g->export()
         );
@@ -137,16 +138,16 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => 'sum([amount])',
-            'amount' => 'sum([])',
+            's' => ['sum([amount])', 'type' => 'money'],
+            'amount' => ['sum([])', 'type' => 'money'],
         ]);
 
-        $g->addExpression('double', '[s]+[amount]');
+        $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
         $g->addCondition('double', '>', 10);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19, 's' => 19, 'double' => 38],
+                ['client' => 'Vinny', 'client_id' => '1', 's' => 19.0, 'amount' => 19.0, 'double' => 38.0],
             ],
             $g->export()
         );
@@ -157,16 +158,16 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => 'sum([amount])',
-            'amount' => 'sum([])',
+            's' => ['sum([amount])', 'type' => 'money'],
+            'amount' => ['sum([])', 'type' => 'money'],
         ]);
 
-        $g->addExpression('double', '[s]+[amount]');
+        $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
         $g->addCondition('double', 38);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19, 's' => 19, 'double' => 38],
+                ['client' => 'Vinny', 'client_id' => '1', 's' => 19.0, 'amount' => 19.0, 'double' => 38.0],
             ],
             $g->export()
         );
@@ -177,16 +178,16 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => 'sum([amount])',
-            'amount' => 'sum([])',
+            's' => ['sum([amount])', 'type' => 'money'],
+            'amount' => ['sum([])', 'type' => 'money'],
         ]);
 
-        $g->addExpression('double', '[s]+[amount]');
+        $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
         $g->addCondition('client_id', 2);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4, 's' => 4, 'double' => 8],
+                ['client' => 'Zoe', 'client_id' => '2', 's' => 4.0, 'amount' => 4.0, 'double' => 8.0],
             ],
             $g->export()
         );
@@ -197,13 +198,13 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            'amount' => 'sum([])',
+            'amount' => ['sum([])', 'type' => 'money'],
         ]);
         $g->setLimit(1);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Vinny', 'client_id' => 1, 'amount' => 19],
+                ['client' => 'Vinny', 'client_id' => '1', 'amount' => 19.0],
             ],
             $g->export()
         );
@@ -214,13 +215,13 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            'amount' => 'sum([])',
+            'amount' => ['sum([])', 'type' => 'money'],
         ]);
         $g->setLimit(1, 1);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
-                ['client' => 'Zoe', 'client_id' => 2, 'amount' => 4],
+                ['client' => 'Zoe', 'client_id' => '2', 'amount' => 4.0],
             ],
             $g->export()
         );

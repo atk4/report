@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace atk4\report\tests;
 
-/**
- * Tests basic create, update and delete operatiotns
- */
 class UnionTest extends \atk4\schema\PhpunitTestCase
 {
     /** @var array */
@@ -72,7 +69,6 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
         );
     }
 
-
     public function testActions()
     {
         $t = $this->t;
@@ -106,7 +102,6 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
         $this->assertEquals(37, $t->action('fx', ['sum', 'amount'])->getOne());
     }
-
 
     public function testBasics()
     {
@@ -168,7 +163,7 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
     /**
      * If all nested models have a physical field to which a grouped column can be mapped into, then we should group all our
-     * sub-queries
+     * sub-queries.
      */
     public function testGrouping3()
     {
@@ -186,7 +181,7 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
     /**
      * If a nested model has a field defined through expression, it should be still used in grouping. We should test this
-     * with both expressions based off the fields and static expressions (such as "blah")
+     * with both expressions based off the fields and static expressions (such as "blah").
      */
     public function testSubGroupingByExpressions()
     {
@@ -200,7 +195,7 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
         $this->assertEquals([
             ['type' => 'invoice', 'amount' => 23],
             ['type' => 'payment', 'amount' => 14],
-        ], $t->export(['type','amount']));
+        ], $t->export(['type', 'amount']));
     }
 
     public function testReference()
@@ -234,9 +229,7 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
             ->addField('balance', ['field' => 'amount', 'aggregate' => 'sum']);
 
         $this->assertTrue(true); // fake assert
-        /*
-        select "client"."id","client"."name",(select sum("val") from (select sum("amount") "val" from "invoice" where "client_id" = "client"."id" UNION ALL select sum("amount") "val" from "payment" where "client_id" = "client"."id") "derivedTable") "balance" from "client" where "client"."id" = 1 limit 0, 1
-        */
+        //select "client"."id","client"."name",(select sum("val") from (select sum("amount") "val" from "invoice" where "client_id" = "client"."id" UNION ALL select sum("amount") "val" from "payment" where "client_id" = "client"."id") "derivedTable") "balance" from "client" where "client"."id" = 1 limit 0, 1
         //$c->load(1);
     }
 }

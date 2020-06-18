@@ -12,7 +12,7 @@ use atk4\dsql\Query;
 
 /**
  * GroupModel allows you to query using "group by" clause on your existing model.
- * It's quite simple to set up:
+ * It's quite simple to set up.
  *
  * $gr = new GroupModel($mymodel);
  * $gr->groupBy(['first','last'], ['salary'=>'sum([])'];
@@ -47,10 +47,10 @@ class GroupModel extends Model
     public $read_only = true;
 
     /** @var Model */
-    public $master_model = null;
+    public $master_model;
 
     /** @var string */
-    public $id_field = null;
+    public $id_field;
 
     /** @var array */
     public $group = [];
@@ -79,7 +79,7 @@ class GroupModel extends Model
     /**
      * Specify a single field or array of fields on which we will group model.
      *
-     * @param array $group Array of field names
+     * @param array $group     Array of field names
      * @param array $aggregate Array of aggregate mapping
      *
      * @return $this
@@ -263,7 +263,6 @@ class GroupModel extends Model
                 $this->hook(self::HOOK_AFTER_GROUP_SELECT, [$query]);
 
                 return $query;
-
             case 'count':
                 $query = $this->master_model->action($mode, $args);
 
@@ -273,11 +272,10 @@ class GroupModel extends Model
                 $this->hook(self::HOOK_AFTER_GROUP_SELECT, [$query]);
 
                 $q = $query->dsql();
-                $q->table($this->expr("([]) der", [$query]));
+                $q->table($this->expr('([]) der', [$query]));
                 $q->field('count(*)');
 
                 return $q;
-
             case 'field':
                 if (!is_string($args[0])) {
                     throw new Exception(['action(field) only support string fields', 'field' => $args[0]]);
@@ -291,8 +289,8 @@ class GroupModel extends Model
                         'action' => $mode,
                     ]);
                 }
-                break;
 
+                break;
             case 'fx':
 
                 $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias' => 'val']);
@@ -301,7 +299,6 @@ class GroupModel extends Model
                 $query->reset('table')->table($subquery);
 
                 return $query;
-
             default:
                 throw new Exception([
                     'Unsupported action mode',
@@ -313,12 +310,13 @@ class GroupModel extends Model
 
         // Next - substitute FROM table with our subquery expression
         $query->reset('table')->table($subquery);
+
         return $query;
     }
 
     /**
      * Our own way applying conditions, where we use "having" for
-     * fields
+     * fields.
      */
     public function initQueryConditions(Query $q): Query
     {
@@ -329,7 +327,6 @@ class GroupModel extends Model
         }
 
         foreach ($m->conditions as $cond) {
-
             // Options here are:
             // count($cond) == 1, we will pass the only
             // parameter inside where()
@@ -345,6 +342,7 @@ class GroupModel extends Model
                 }
 
                 $q->having($cond[0]);
+
                 continue;
             }
 
@@ -371,7 +369,6 @@ class GroupModel extends Model
 
         return $q;
     }
-
 
     // {{{ Debug Methods
 

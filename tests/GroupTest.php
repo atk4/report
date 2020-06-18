@@ -6,9 +6,6 @@ namespace atk4\report\tests;
 
 use atk4\report\GroupModel;
 
-/**
- * Tests basic create, update and delete operatiotns
- */
 class GroupTest extends \atk4\schema\PhpunitTestCase
 {
     /** @var array */
@@ -52,7 +49,7 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $this->assertEquals(
             [
                 ['client' => 'Vinny', 'client_id' => 1, 'c' => 2],
-                ['client' => 'Zoe', 'client_id' =>2, 'c' => 1],
+                ['client' => 'Zoe', 'client_id' => 2, 'c' => 1],
             ],
             $g->export()
         );

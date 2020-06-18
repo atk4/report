@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace atk4\report\tests;
 
-/**
- * Tests basic create, update and delete operatiotns
- */
 class UnionExprTest extends \atk4\schema\PhpunitTestCase
 {
     /** @var array */
@@ -75,11 +72,10 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
 
         $e = $this->getEscapeChar();
         $this->assertEquals(
-            str_replace('`',$e, '(select (\'invoice\') `type`,-`amount` `amount` from `invoice` UNION ALL select NULL `type`,`amount` `amount` from `payment`) `derivedTable`'),
+            str_replace('`', $e, '(select (\'invoice\') `type`,-`amount` `amount` from `invoice` UNION ALL select NULL `type`,`amount` `amount` from `payment`) `derivedTable`'),
             $t->getSubQuery(['type', 'amount'])->render()
         );
     }
-
 
     public function testActions()
     {
@@ -120,7 +116,7 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
         $e = $this->getEscapeChar();
         $this->assertEquals(
             str_replace('"', $e, '(select sum(-"amount") from "invoice" UNION ALL select sum("amount") from "payment") "derivedTable"'),
-            $t->getSubAction('fx', ['sum','amount'])->render()
+            $t->getSubAction('fx', ['sum', 'amount'])->render()
         );
     }
 
@@ -145,7 +141,6 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
             ['name' => 'prepay', 'amount' => 10],
             ['name' => 'full pay', 'amount' => 4],
         ], $t->export());
-
 
         // Transaction is Union Model
         $client->hasMany('Transaction', new Transaction2());
@@ -185,7 +180,7 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
 
     /**
      * If all nested models have a physical field to which a grouped column can be mapped into, then we should group all our
-     * sub-queries
+     * sub-queries.
      */
     public function testGrouping3()
     {
@@ -203,7 +198,7 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
 
     /**
      * If a nested model has a field defined through expression, it should be still used in grouping. We should test this
-     * with both expressions based off the fields and static expressions (such as "blah")
+     * with both expressions based off the fields and static expressions (such as "blah").
      */
     public function testSubGroupingByExpressions()
     {
@@ -251,12 +246,9 @@ class UnionExprTest extends \atk4\schema\PhpunitTestCase
             ->addField('balance', ['field' => 'amount', 'aggregate' => 'sum']);
 
         $this->assertTrue(true); // fake assert
-        /*
-        select "client"."id","client"."name",(select sum("val") from (select sum("amount") "val" from "invoice" where "client_id" = "client"."id" UNION ALL select sum("amount") "val" from "payment" where "client_id" = "client"."id") "derivedTable") "balance" from "client" where "client"."id" = 1 limit 0, 1
-        */
+        //select "client"."id","client"."name",(select sum("val") from (select sum("amount") "val" from "invoice" where "client_id" = "client"."id" UNION ALL select sum("amount") "val" from "payment" where "client_id" = "client"."id") "derivedTable") "balance" from "client" where "client"."id" = 1 limit 0, 1
         //$c->load(1);
     }
-
 
     /**
      * Model's conditions can still be placed on the original field values.

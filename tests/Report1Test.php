@@ -6,9 +6,6 @@ namespace atk4\report\tests;
 
 use atk4\report\GroupModel;
 
-/**
- * Tests basic create, update and delete operatiotns
- */
 class Report1Test extends \atk4\schema\PhpunitTestCase
 {
     /** @var array */

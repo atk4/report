@@ -31,7 +31,7 @@ class UnionModel extends Model
     public $read_only = true;
 
     /**
-     * Contain array of array containing model and mappings:
+     * Contain array of array containing model and mappings.
      *
      * $union = [ [ $m1, ['amount'=>'total_gross'] ] , [$m2, []] ];
      *
@@ -41,14 +41,14 @@ class UnionModel extends Model
 
     /**
      * Union normally does not have ID field. Setting this to null will
-     * disable various per-id operations, such as load();
+     * disable various per-id operations, such as load().
      *
      * If you can define unique ID field, you can specify it inside your
      * union model.
      *
      * @var string
      */
-    public $id_field = null;
+    public $id_field;
 
     /**
      * When aggregation happens, this field will contain list of fields
@@ -58,11 +58,11 @@ class UnionModel extends Model
      *
      * @var array|string
      */
-    public $group = null;
+    public $group;
 
     /**
      * When grouping, the functions will be applied as per aggregate
-     * fields, e.g. 'balance'=>['sum', 'amount'];
+     * fields, e.g. 'balance'=>['sum', 'amount'].
      *
      * You can also use Expression instead of array.
      *
@@ -106,7 +106,6 @@ class UnionModel extends Model
         $args = [];
 
         foreach ($this->union as $n => list($model, $mapping)) {
-
             // map fields for related model
             $f = [];
             foreach ($fields as $field) {
@@ -118,6 +117,7 @@ class UnionModel extends Model
                     if (!$this->hasField($field)) {
                         $field_object = $model->expr('NULL');
                         $f[$field] = $field_object;
+
                         continue;
                     }
 
@@ -166,7 +166,7 @@ class UnionModel extends Model
             $expr[] = '[' . $cnt . ']';
             $q = $this->persistence->action($model, 'select', [false]);
 
-            if ($model instanceof UnionModel) {
+            if ($model instanceof self) {
                 $subquery = $model->getSubQuery($fields);
                 //$query = parent::action($mode, $args);
                 $q->reset('table')->table($subquery);
@@ -194,7 +194,7 @@ class UnionModel extends Model
                     $q->group($this->group);
                 }
             }
-            
+
             // subquery should not be wrapped in parenthesis, SQLite is especially picky about that
             $q->allowToWrapInParenthesis = false;
 
@@ -204,13 +204,13 @@ class UnionModel extends Model
         // last element is table name itself
         $args[$cnt] = $this->table;
 
-        return $this->persistence->dsql()->expr('(' . join(' UNION ALL ', $expr) . ') {' . $cnt . '}', $args);
+        return $this->persistence->dsql()->expr('(' . implode(' UNION ALL ', $expr) . ') {' . $cnt . '}', $args);
     }
 
     /**
      * No description.
      */
-    public function getSubAction(string $action, array $act_arg=[]): Expression
+    public function getSubAction(string $action, array $act_arg = []): Expression
     {
         $cnt = 0;
         $expr = [];
@@ -236,11 +236,11 @@ class UnionModel extends Model
 
             $args[$cnt++] = $q;
         }
-        
+
         // last element is table name itself
         $args[$cnt] = $this->table;
 
-        return $this->persistence->dsql()->expr('(' . join(' UNION ALL ', $expr) . ') {' . $cnt . '}', $args);
+        return $this->persistence->dsql()->expr('(' . implode(' UNION ALL ', $expr) . ') {' . $cnt . '}', $args);
     }
 
     /**
@@ -257,7 +257,7 @@ class UnionModel extends Model
             case 'insert':
             case 'update':
             case 'delete':
-                throw new Exception(['UnionModel does not support this action', 'action'=>$mode]);
+                throw new Exception(['UnionModel does not support this action', 'action' => $mode]);
         }
 
         // get list of available fields
@@ -280,14 +280,14 @@ class UnionModel extends Model
                     $query->group($this->group);
                 }
                 $this->hook(self::HOOK_AFTER_UNION_SELECT, [$query]);
-                return $query;
 
+                return $query;
             case 'count':
                 $subquery = $this->getSubAction('count', ['alias' => 'cnt']);
                 $query = parent::action('fx', ['sum', $this->expr('{}', ['cnt'])]);
                 $query->reset('table')->table($subquery);
-                return $query;
 
+                return $query;
             case 'field':
                 if (!is_string($args[0])) {
                     throw new Exception(['action(field) only support string fields', 'field' => $arg[0]]);
@@ -301,14 +301,14 @@ class UnionModel extends Model
                         'action' => $type,
                     ]);
                 }
-                break;
 
+                break;
             case 'fx':
                 $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias'=>'val']);
                 $query = parent::action('fx', [$args[0], $this->expr('{}', ['val'])]);
                 $query->reset('table')->table($subquery);
-                return $query;
 
+                return $query;
             default:
                 throw new Exception([
                     'Unsupported action mode',
@@ -320,6 +320,7 @@ class UnionModel extends Model
 
         // Next - substitute FROM table with our subquery expression
         $query->reset('table')->table($subquery);
+
         return $query;
     }
 
@@ -347,7 +348,7 @@ class UnionModel extends Model
     /**
      * Adds nested model in union.
      *
-     * @param string|Model $class Model.
+     * @param string|Model $class   model
      * @param array        $mapping Array of field mapping
      */
     public function addNestedModel($class, array $mapping = []): Model
@@ -439,14 +440,17 @@ class UnionModel extends Model
                 switch (func_num_args()) {
                     case 2:
                         $model->addCondition($ff, $operator);
+
                         break;
                     case 3:
                     case 4:
                         $model->addCondition($ff, $operator, $value);
+
                         break;
                 }
             } catch (\atk4\core\Exception $e) {
                 $e->addMoreInfo('sub_model', $n);
+
                 throw $e;
             }
         }

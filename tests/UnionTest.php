@@ -41,17 +41,17 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
         $e = $this->getEscapeChar();
         $this->assertEquals(
-            str_replace('"', $e, '((select "name" "name" from "invoice") UNION ALL (select "name" "name" from "payment")) "derivedTable"'),
+            str_replace('"', $e, '(select "name" "name" from "invoice" UNION ALL select "name" "name" from "payment") "derivedTable"'),
             $t->getSubQuery(['name'])->render()
         );
 
         $this->assertEquals(
-            str_replace('"', $e, '((select "name" "name","amount" "amount" from "invoice") UNION ALL (select "name" "name","amount" "amount" from "payment")) "derivedTable"'),
+            str_replace('"', $e, '(select "name" "name","amount" "amount" from "invoice" UNION ALL select "name" "name","amount" "amount" from "payment") "derivedTable"'),
             $t->getSubQuery(['name', 'amount'])->render()
         );
 
         $this->assertEquals(
-            str_replace('"', $e, '((select "name" "name" from "invoice") UNION ALL (select "name" "name" from "payment")) "derivedTable"'),
+            str_replace('"', $e, '(select "name" "name" from "invoice" UNION ALL select "name" "name" from "payment") "derivedTable"'),
             $t->getSubQuery(['name'])->render()
         );
     }
@@ -67,7 +67,7 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
         $e = $this->getEscapeChar();
         $this->assertEquals(
-            str_replace('"', $e, '((select (\'invoice\') "type","amount" "amount" from "invoice") UNION ALL (select NULL "type","amount" "amount" from "payment")) "derivedTable"'),
+            str_replace('"', $e, '(select (\'invoice\') "type","amount" "amount" from "invoice" UNION ALL select NULL "type","amount" "amount" from "payment") "derivedTable"'),
             $t->getSubQuery(['type', 'amount'])->render()
         );
     }
@@ -79,22 +79,22 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
         $e = $this->getEscapeChar();
         $this->assertEquals(
-            str_replace('"', $e, 'select "name","amount" from ((select "name" "name","amount" "amount" from "invoice") UNION ALL (select "name" "name","amount" "amount" from "payment")) "derivedTable"'),
+            str_replace('"', $e, 'select "name","amount" from (select "name" "name","amount" "amount" from "invoice" UNION ALL select "name" "name","amount" "amount" from "payment") "derivedTable"'),
             $t->action('select')->render()
         );
 
         $this->assertEquals(
-            str_replace('"', $e, 'select "name" from ((select "name" "name" from "invoice") UNION ALL (select "name" "name" from "payment")) "derivedTable"'),
+            str_replace('"', $e, 'select "name" from (select "name" "name" from "invoice" UNION ALL select "name" "name" from "payment") "derivedTable"'),
             $t->action('field', ['name'])->render()
         );
 
         $this->assertEquals(
-            str_replace('"', $e, 'select sum("cnt") from ((select count(*) "cnt" from "invoice") UNION ALL (select count(*) "cnt" from "payment")) "derivedTable"'),
+            str_replace('"', $e, 'select sum("cnt") from (select count(*) "cnt" from "invoice" UNION ALL select count(*) "cnt" from "payment") "derivedTable"'),
             $t->action('count')->render()
         );
 
         $this->assertEquals(
-            str_replace('"', $e, 'select sum("val") from ((select sum("amount") "val" from "invoice") UNION ALL (select sum("amount") "val" from "payment")) "derivedTable"'),
+            str_replace('"', $e, 'select sum("val") from (select sum("amount") "val" from "invoice" UNION ALL select sum("amount") "val" from "payment") "derivedTable"'),
             $t->action('fx', ['sum', 'amount'])->render()
         );
     }
@@ -148,7 +148,7 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
         $e = $this->getEscapeChar();
         $this->assertEquals(
-            str_replace('"', $e, '((select "name" "name",sum("amount") "amount" from "invoice" group by "name") UNION ALL (select "name" "name",sum("amount") "amount" from "payment" group by "name")) "derivedTable"'),
+            str_replace('"', $e, '(select "name" "name",sum("amount") "amount" from "invoice" group by "name" UNION ALL select "name" "name",sum("amount") "amount" from "payment" group by "name") "derivedTable"'),
             $t->getSubQuery(['name', 'amount'])->render()
         );
     }
@@ -161,7 +161,7 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
         $e = $this->getEscapeChar();
         $this->assertEquals(
-            str_replace('"', $e, 'select "name",sum("amount") "amount" from ((select "name" "name",sum("amount") "amount" from "invoice" group by "name") UNION ALL (select "name" "name",sum("amount") "amount" from "payment" group by "name")) "derivedTable" group by "name"'),
+            str_replace('"', $e, 'select "name",sum("amount") "amount" from (select "name" "name",sum("amount") "amount" from "invoice" group by "name" UNION ALL select "name" "name",sum("amount") "amount" from "payment" group by "name") "derivedTable" group by "name"'),
             $t->action('select', [['name', 'amount']])->render()
         );
     }
@@ -215,8 +215,8 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
         $e = $this->getEscapeChar();
         $this->assertEquals(
-            str_replace('"', $e, 'select sum("val") from ((select sum("amount") "val" from "invoice" where "client_id" = :a) ' .
-            'UNION ALL (select sum("amount") "val" from "payment" where "client_id" = :b)) "derivedTable"'),
+            str_replace('"', $e, 'select sum("val") from (select sum("amount") "val" from "invoice" where "client_id" = :a ' .
+            'UNION ALL select sum("amount") "val" from "payment" where "client_id" = :b) "derivedTable"'),
             $c->load(1)->ref('tr')->action('fx', ['sum', 'amount'])->render()
         );
     }
@@ -235,7 +235,7 @@ class UnionTest extends \atk4\schema\PhpunitTestCase
 
         $this->assertTrue(true); // fake assert
         /*
-        select "client"."id","client"."name",(select sum("val") from ((select sum("amount") "val" from "invoice" where "client_id" = "client"."id") UNION ALL (select sum("amount") "val" from "payment" where "client_id" = "client"."id")) "derivedTable") "balance" from "client" where "client"."id" = 1 limit 0, 1
+        select "client"."id","client"."name",(select sum("val") from (select sum("amount") "val" from "invoice" where "client_id" = "client"."id" UNION ALL select sum("amount") "val" from "payment" where "client_id" = "client"."id") "derivedTable") "balance" from "client" where "client"."id" = 1 limit 0, 1
         */
         //$c->load(1);
     }

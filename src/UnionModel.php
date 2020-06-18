@@ -194,6 +194,10 @@ class UnionModel extends Model
                     $q->group($this->group);
                 }
             }
+            
+            // subquery should not be wrapped in parenthesis, SQLite is especially picky about that
+            $q->allowToWrapInParenthesis = false;
+
             $args[$cnt++] = $q;
         }
         
@@ -226,6 +230,9 @@ class UnionModel extends Model
             } else {
                 $q = $model->action($action, $act_arg);
             }
+            
+            // subquery should not be wrapped in parenthesis, SQLite is especially picky about that
+            $q->allowToWrapInParenthesis = false;
 
             $args[$cnt++] = $q;
         }

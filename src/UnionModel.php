@@ -200,7 +200,7 @@ class UnionModel extends Model
 
             $args[$cnt++] = $q;
         }
-        
+
         // last element is table name itself
         $args[$cnt] = $this->table;
 
@@ -230,7 +230,7 @@ class UnionModel extends Model
             } else {
                 $q = $model->action($action, $act_arg);
             }
-            
+
             // subquery should not be wrapped in parenthesis, SQLite is especially picky about that
             $q->allowToWrapInParenthesis = false;
 
@@ -304,7 +304,7 @@ class UnionModel extends Model
 
                 break;
             case 'fx':
-                $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias'=>'val']);
+                $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias' => 'val']);
                 $query = parent::action('fx', [$args[0], $this->expr('{}', ['val'])]);
                 $query->reset('table')->table($subquery);
 

@@ -95,7 +95,7 @@ class GroupModel extends Model
         }
 
         foreach ($aggregate as $field => $expr) {
-            $seed = (array) $expr;
+            $seed = is_array($expr) ? $expr : [$expr];
 
             // if field originally defined in the parent model, then it can be used as part of expression
             if ($this->master_model->hasField($field)) {

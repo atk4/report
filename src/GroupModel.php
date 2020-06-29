@@ -97,22 +97,16 @@ class GroupModel extends Model
         foreach ($aggregate as $field => $expr) {
             $seed = is_array($expr) ? $expr : [$expr];
 
-            // field originally defined in the parent model
+            // if field originally defined in the parent model, then it can be used as part of expression
             if ($this->master_model->hasField($field)) {
                 $field_object = $this->master_model->getField($field);
+                $seed['expr'] = $this->master_model->expr($seed[0] ?? $seed['expr'], [$field_object]);
             } else {
-                $field_object = null;
-            }
-
-            // can be used as part of expression
-            if ($field_object) {
-                $seed[0] = $this->master_model->expr($seed[0], [$field_object]);
-            } else {
-                $seed[0] = $this->master_model->expr($seed[0]);
+                $seed['expr'] = $this->master_model->expr($seed[0] ?? $seed['expr']);
             }
 
             // now add the expressions here
-            $field_object = $this->addExpression($field, $seed);
+            $this->addExpression($field, $seed);
         }
 
         return $this;
@@ -138,22 +132,27 @@ class GroupModel extends Model
      */
     public function addField($name, $seed = [])
     {
-        if (!is_array($seed)) {
-            $seed = [$seed];
+        $seed = is_array($seed) ? $seed : [$seed];
+
+        if (isset($seed[0]) && $seed[0] instanceof Field_SQL_Expression) {
+            return parent::addField($name, $seed[0]);
         }
 
-        if (
-            isset($seed[0]) && $seed[0] instanceof Field_SQL_Expression
-            || isset($seed['never_persist']) && $seed['never_persist']
-        ) {
+        if ($seed['never_persist'] ?? false) {
             return parent::addField($name, $seed);
         }
 
         if ($this->master_model->hasField($name)) {
             $field = $this->master_model->getField($name);
+        } else {
+            $field = null;
         }
 
-        return parent::addField($name, $field ? array_merge([$field], $seed) : $seed);
+        //return parent::addField($name, $field ? array_merge([$field], $seed) : $seed);
+        //return parent::addField($name, $field ?: $seed);
+        return $field
+            ? parent::addField($name, $field)->setDefaults($seed)
+            : parent::addField($name, $seed);
     }
 
     /**
@@ -177,8 +176,6 @@ class GroupModel extends Model
         foreach ($this->group as $field) {
             if ($this->master_model->hasField($field)) {
                 $el = $this->master_model->getField($field);
-            }
-            if ($el) {
                 $query->group($el);
             } else {
                 $query->group($this->expr($field));

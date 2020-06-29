@@ -15,7 +15,7 @@ class Client extends Model
         parent::init();
         $this->addField('name');
 
-        $this->hasMany('Payment', Payment::class);
-        $this->hasMany('Invoice', Invoice::class);
+        $this->hasMany('Payment', [Payment::class]);
+        $this->hasMany('Invoice', [Invoice::class]);
     }
 }

@@ -34,9 +34,10 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         parent::setUp();
         $this->setDB($this->init_db);
 
-        $m1 = new Invoice($this->db);
-        $m1->getRef('client_id')->addTitle();
-        $this->g = new GroupModel($m1);
+        $m_invoice = new Invoice($this->db);
+        $m_invoice->getRef('client_id')->addTitle();
+
+        $this->g = new GroupModel($m_invoice);
         $this->g->addField('client');
     }
 
@@ -44,7 +45,7 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
     {
         $g = $this->g;
 
-        $g->groupBy(['client_id'], ['c' => ['count(*)', 'type' => 'integer']]);
+        $g->groupBy(['client_id'], ['c' => ['expr' => 'count(*)', 'type' => 'integer']]);
 
         $this->assertSame(
             [
@@ -60,7 +61,7 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            'amount' => ['sum([])', 'type' => 'money'],
+            'amount' => ['expr' => 'sum([])', 'type' => 'money'],
         ]);
 
         $this->assertSame(
@@ -77,10 +78,10 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => ['sum([amount])', 'type' => 'money'],
-            'min' => ['min([amount])', 'type' => 'money'],
-            'max' => ['max([amount])', 'type' => 'money'],
-            'amount' => ['sum([])', 'type' => 'money'], // same as `s`, but reuse name `amount`
+            's' => ['expr' => 'sum([amount])', 'type' => 'money'],
+            'min' => ['expr' => 'min([amount])', 'type' => 'money'],
+            'max' => ['expr' => 'max([amount])', 'type' => 'money'],
+            'amount' => ['expr' => 'sum([])', 'type' => 'money'], // same as `s`, but reuse name `amount`
         ]);
 
         $this->assertSame(
@@ -97,8 +98,8 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => ['sum([amount])', 'type' => 'money'],
-            'amount' => ['sum([])', 'type' => 'money'],
+            's' => ['expr' => 'sum([amount])', 'type' => 'money'],
+            'amount' => ['expr' => 'sum([])', 'type' => 'money'],
         ]);
 
         $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
@@ -118,8 +119,8 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g->master_model->addCondition('name', 'chair purchase');
 
         $g->groupBy(['client_id'], [
-            's' => ['sum([amount])', 'type' => 'money'],
-            'amount' => ['sum([])', 'type' => 'money'],
+            's' => ['expr' => 'sum([amount])', 'type' => 'money'],
+            'amount' => ['expr' => 'sum([])', 'type' => 'money'],
         ]);
 
         $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
@@ -138,8 +139,8 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => ['sum([amount])', 'type' => 'money'],
-            'amount' => ['sum([])', 'type' => 'money'],
+            's' => ['expr' => 'sum([amount])', 'type' => 'money'],
+            'amount' => ['expr' => 'sum([])', 'type' => 'money'],
         ]);
 
         $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
@@ -158,8 +159,8 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => ['sum([amount])', 'type' => 'money'],
-            'amount' => ['sum([])', 'type' => 'money'],
+            's' => ['expr' => 'sum([amount])', 'type' => 'money'],
+            'amount' => ['expr' => 'sum([])', 'type' => 'money'],
         ]);
 
         $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
@@ -178,8 +179,8 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            's' => ['sum([amount])', 'type' => 'money'],
-            'amount' => ['sum([])', 'type' => 'money'],
+            's' => ['expr' => 'sum([amount])', 'type' => 'money'],
+            'amount' => ['expr' => 'sum([])', 'type' => 'money'],
         ]);
 
         $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
@@ -198,7 +199,7 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            'amount' => ['sum([])', 'type' => 'money'],
+            'amount' => ['expr' => 'sum([])', 'type' => 'money'],
         ]);
         $g->setLimit(1);
 
@@ -215,7 +216,7 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
         $g = $this->g;
 
         $g->groupBy(['client_id'], [
-            'amount' => ['sum([])', 'type' => 'money'],
+            'amount' => ['expr' => 'sum([])', 'type' => 'money'],
         ]);
         $g->setLimit(1, 1);
 

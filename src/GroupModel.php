@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace atk4\report;
 
 use atk4\data\Field;
-use atk4\data\Field_SQL_Expression;
+use atk4\data\FieldSqlExpression;
 use atk4\data\Model;
 use atk4\data\Reference;
 use atk4\dsql\Query;
@@ -99,7 +99,7 @@ class GroupModel extends Model
 
             // if field originally defined in the parent model, then it can be used as part of expression
             if ($this->master_model->hasField($field)) {
-                $field_object = $this->master_model->getField($field);
+                $field_object = $this->master_model->getField($field); // @TODO Probably need cloning here or in atk4/data
                 $seed['expr'] = $this->master_model->expr($seed[0] ?? $seed['expr'], [$field_object]);
             } else {
                 $seed['expr'] = $this->master_model->expr($seed[0] ?? $seed['expr']);
@@ -134,7 +134,7 @@ class GroupModel extends Model
     {
         $seed = is_array($seed) ? $seed : [$seed];
 
-        if (isset($seed[0]) && $seed[0] instanceof Field_SQL_Expression) {
+        if (isset($seed[0]) && $seed[0] instanceof FieldSqlExpression) {
             return parent::addField($name, $seed[0]);
         }
 
@@ -143,7 +143,8 @@ class GroupModel extends Model
         }
 
         if ($this->master_model->hasField($name)) {
-            $field = $this->master_model->getField($name);
+            $field = clone $this->master_model->getField($name);
+            $field->owner = null; // will be new owner
         } else {
             $field = null;
         }
@@ -244,7 +245,7 @@ class GroupModel extends Model
             if ($this->getField($field)->never_persist) {
                 continue;
             }
-            if ($this->getField($field) instanceof Field_SQL_Expression) {
+            if ($this->getField($field) instanceof FieldSqlExpression) {
                 continue;
             }
             $fields[] = $field;

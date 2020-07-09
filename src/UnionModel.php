@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace atk4\report;
 
 use atk4\data\Field;
-use atk4\data\Field_SQL_Expression;
+use atk4\data\FieldSqlExpression;
 use atk4\data\Model;
 use atk4\dsql\Expression;
 
@@ -127,7 +127,7 @@ class UnionModel extends Model
                     // Union can have some fields defined as expressions. We don't touch those either.
                     // Imants: I have no idea why this condition was set, but it's limiting our ability
                     // to use expression fields in mapping
-                    if ($this->getField($field) instanceof Field_SQL_Expression && !isset($this->aggregate[$field])) {
+                    if ($this->getField($field) instanceof FieldSqlExpression && !isset($this->aggregate[$field])) {
                         continue;
                     }
 

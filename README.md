@@ -4,8 +4,10 @@
 
 This extension for Agile Data implements advanced reporting capabilities:
 
--   Aggregate models. Provite grouping of existing model.
+-   Aggregate models. Provide grouping of existing model.
 -   Union models. Combine one or multiple models.
+
+**IMPORTANT - This repository is discontinued and functionality of Aggregate and Union models will be moved to https://github.com/atk4/data starting from version 2.3.0**
 
 ## Installation and Usage
 

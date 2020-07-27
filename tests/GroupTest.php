@@ -165,8 +165,6 @@ class GroupTest extends \atk4\schema\PhpunitTestCase
 
         $g->addExpression('double', ['[s]+[amount]', 'type' => 'money']);
         $g->addCondition('double', 38);
-//var_dump($g->scope());
-var_dump($g->action('select')->getDebugQuery());
 
         $this->assertSame(
             [

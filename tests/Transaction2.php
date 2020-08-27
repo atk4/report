@@ -8,7 +8,7 @@ use atk4\report\UnionModel;
 
 class Transaction2 extends UnionModel
 {
-    protected function init(): void
+    public function init(): void
     {
         parent::init();
 

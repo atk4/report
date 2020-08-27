@@ -10,7 +10,7 @@ class Invoice extends Model
 {
     public $table = 'invoice';
 
-    protected function init(): void
+    public function init(): void
     {
         parent::init();
         $this->addField('name');

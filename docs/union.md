@@ -10,7 +10,7 @@ In my model scheam, Client may have multiple invoices and multiple payments. Pay
 class Client extends \atk4\data\Model {
   public $table = 'client';
   
-  protected function init() {
+  function init() {
   	parent::init();
       $this->addField('name');
     

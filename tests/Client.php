@@ -10,7 +10,7 @@ class Client extends Model
 {
     public $table = 'client';
 
-    public function init(): void
+    protected function init(): void
     {
         parent::init();
         $this->addField('name');

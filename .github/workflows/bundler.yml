@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: ${{ $github.ref }}
+          ref: ${{ github.ref }}
       - run: echo ${{ github.ref }}
 
       - name: Update to stable dependencies

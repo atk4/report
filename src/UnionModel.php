@@ -255,7 +255,6 @@ class UnionModel extends Model
         $subquery = null;
 
         switch ($mode) {
-
             case 'select':
                 $subquery = $this->getSubQuery($fields);
                 $query = parent::action($mode, $args);

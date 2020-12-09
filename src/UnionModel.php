@@ -255,6 +255,7 @@ class UnionModel extends Model
         $subquery = null;
 
         switch ($mode) {
+
             case 'select':
                 $subquery = $this->getSubQuery($fields);
                 $query = parent::action($mode, $args);
@@ -266,12 +267,14 @@ class UnionModel extends Model
                 $this->hook(self::HOOK_AFTER_UNION_SELECT, [$query]);
 
                 return $query;
+
             case 'count':
                 $subquery = $this->getSubAction('count', ['alias' => 'cnt']);
                 $query = parent::action('fx', ['sum', $this->expr('{}', ['cnt'])]);
                 $query->reset('table')->table($subquery);
 
                 return $query;
+
             case 'field':
                 if (!is_string($args[0])) {
                     throw new Exception(['action(field) only support string fields', 'field' => $arg[0]]);
@@ -287,12 +290,14 @@ class UnionModel extends Model
                 }
 
                 break;
+
             case 'fx':
                 $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias' => 'val']);
                 $query = parent::action('fx', [$args[0], $this->expr('{}', ['val'])]);
                 $query->reset('table')->table($subquery);
 
                 return $query;
+
             default:
                 throw new Exception([
                     'Unsupported action mode',
@@ -437,6 +442,7 @@ class UnionModel extends Model
                         $model->addCondition($ff, $operator);
 
                         break;
+
                     case 3:
                     case 4:
                         $model->addCondition($ff, $operator, $value);

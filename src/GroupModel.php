@@ -253,6 +253,7 @@ class GroupModel extends Model
         */
 
         $subquery = null;
+
         switch ($mode) {
             case 'select':
                 // select but no need your fields
@@ -265,6 +266,7 @@ class GroupModel extends Model
                 $this->hook(self::HOOK_AFTER_GROUP_SELECT, [$query]);
 
                 return $query;
+
             case 'count':
                 $query = $this->master_model->action($mode, $args);
 
@@ -278,6 +280,7 @@ class GroupModel extends Model
                 $q->field('count(*)');
 
                 return $q;
+
             case 'field':
                 if (!is_string($args[0])) {
                     throw new Exception(['action(field) only support string fields', 'field' => $args[0]]);
@@ -293,14 +296,15 @@ class GroupModel extends Model
                 }
 
                 break;
-            case 'fx':
 
+            case 'fx':
                 $subquery = $this->getSubAction('fx', [$args[0], $args[1], 'alias' => 'val']);
 
                 $query = parent::action('fx', [$args[0], $this->expr('val')]);
                 $query->reset('table')->table($subquery);
 
                 return $query;
+
             default:
                 throw new Exception([
                     'Unsupported action mode',

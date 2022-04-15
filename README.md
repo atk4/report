@@ -1,3 +1,5 @@
+# ⚠️ repo was integrated into [atk4/data](https://github.com/atk4/data) ⚠️
+
 # Agile Data - Reporting Add-on
 
 ![Build](https://github.com/atk4/report/workflows/Unit%20Testing/badge.svg)
